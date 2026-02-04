@@ -41,48 +41,52 @@ export const RecentActivity = () => {
         const items: ActivityItem[] = [];
 
         for (const log of addedLogs) {
+          if (!('args' in log)) continue; // Type guard
           const block = await log.getBlock();
           items.push({
             id: log.transactionHash,
             type: 'measurement',
             title: 'Nova Medição',
-            description: `Projeto #${log.args?.[1]} registrou ${log.args?.[2]}kg de CO₂`,
+            description: `Projeto #${log.args[1]} registrou ${log.args[2]}kg de CO₂`,
             timestamp: new Date(block.timestamp * 1000),
             hash: log.transactionHash
           });
         }
 
         for (const log of verifiedLogs) {
+          if (!('args' in log)) continue;
           const block = await log.getBlock();
           items.push({
             id: log.transactionHash,
             type: 'verification',
             title: 'Medição Verificada',
-            description: `Medição #${log.args?.[0]} aprovada`,
+            description: `Medição #${log.args[0]} aprovada`,
             timestamp: new Date(block.timestamp * 1000),
             hash: log.transactionHash
           });
         }
 
         for (const log of issuedLogs) {
+          if (!('args' in log)) continue;
           const block = await log.getBlock();
           items.push({
             id: log.transactionHash,
             type: 'issuance',
             title: 'Créditos Emitidos',
-            description: `${ethers.formatUnits(log.args?.[1], 18)} créditos gerados`,
+            description: `${ethers.formatUnits(log.args[1], 18)} créditos gerados`,
             timestamp: new Date(block.timestamp * 1000),
             hash: log.transactionHash
           });
         }
 
         for (const log of retiredLogs) {
+          if (!('args' in log)) continue;
           const block = await log.getBlock();
           items.push({
             id: log.transactionHash,
             type: 'retirement',
             title: 'Créditos Aposentados',
-            description: `${ethers.formatUnits(log.args?.[1], 18)} queimados. ${log.args?.[2]}`,
+            description: `${ethers.formatUnits(log.args[1], 18)} queimados. ${log.args[2]}`,
             timestamp: new Date(block.timestamp * 1000),
             hash: log.transactionHash
           });
