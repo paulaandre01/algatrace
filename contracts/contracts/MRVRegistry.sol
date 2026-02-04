@@ -11,7 +11,7 @@ contract MRVRegistry is AccessControl {
     CarbonCreditToken public creditToken;
     AlgaeProjectNFT public projectNFT;
 
-    enum Status { Pending, Verified, Rejected, Minted }
+    enum Status { Pending, Verified, Rejected, Minted, Retired }
 
     struct Measurement {
         uint256 id;
@@ -30,6 +30,7 @@ contract MRVRegistry is AccessControl {
     event MeasurementAdded(uint256 indexed id, uint256 indexed projectId, uint256 co2Captured);
     event MeasurementVerified(uint256 indexed id, address verifier);
     event CreditsIssued(uint256 indexed measurementId, uint256 amount);
+    event CreditsRetired(uint256 indexed measurementId, uint256 amount, string reason);
 
     constructor(address _creditToken, address _projectNFT) {
         creditToken = CarbonCreditToken(_creditToken);
@@ -82,16 +83,28 @@ contract MRVRegistry is AccessControl {
         m.status = Status.Minted;
         
         // 1 CO2 = 1 Credit (with 18 decimals)
-        // Assuming co2Captured is in kg, and we want 1 token per tonne, or 1 token per kg?
-        // Let's assume 1 Token = 1 kg of CO2 for this Beta to make numbers visible.
-        // Or standard: 1 Credit = 1 Tonne.
-        // Let's use 18 decimals. If co2Captured is integer kg, amount = co2Captured * 10^18.
-        
         uint256 amount = m.co2Captured * 10**18;
         address projectOwner = projectNFT.ownerOf(m.projectId);
         
         creditToken.mint(projectOwner, amount);
         emit CreditsIssued(measurementId, amount);
+    }
+
+    function retireCredits(uint256 measurementId, string memory reason, string memory report) public {
+        Measurement storage m = measurements[measurementId];
+        require(m.status == Status.Minted, "Credits not minted or already retired");
+        
+        // Only project owner can retire (burn) their credits
+        address projectOwner = projectNFT.ownerOf(m.projectId);
+        require(msg.sender == projectOwner, "Only project owner can retire credits");
+
+        uint256 amount = m.co2Captured * 10**18;
+        
+        // Burn tokens from user (requires approval)
+        creditToken.burnFrom(msg.sender, amount);
+        
+        m.status = Status.Retired;
+        emit CreditsRetired(measurementId, amount, reason);
     }
 
     function getProjectMeasurements(uint256 projectId) public view returns (Measurement[] memory) {

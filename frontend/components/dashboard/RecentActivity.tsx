@@ -35,7 +35,7 @@ export const RecentActivity = () => {
           mrvContract.queryFilter(mrvContract.filters.MeasurementAdded(), fromBlock),
           mrvContract.queryFilter(mrvContract.filters.MeasurementVerified(), fromBlock),
           mrvContract.queryFilter(mrvContract.filters.CreditsIssued(), fromBlock),
-          tokenContract.queryFilter(tokenContract.filters.CreditRetired(), fromBlock)
+          mrvContract.queryFilter(mrvContract.filters.CreditsRetired(), fromBlock)
         ]);
 
         const items: ActivityItem[] = [];
@@ -86,7 +86,7 @@ export const RecentActivity = () => {
             id: log.transactionHash,
             type: 'retirement',
             title: 'Créditos Aposentados',
-            description: `${ethers.formatUnits(log.args[1], 18)} queimados. ${log.args[2]}`,
+            description: `${ethers.formatUnits(log.args[1], 18)} aposentados. ${log.args[2]}`,
             timestamp: new Date(block.timestamp * 1000),
             hash: log.transactionHash
           });

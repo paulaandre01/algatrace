@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Leaf, Activity, CheckCircle2, XCircle, Clock, Search, Flame } from 'lucide-react';
 import { useWallet } from '@/hooks/useWallet';
-import { getMRVRegistry } from '@/lib/contracts';
+import { getMRVRegistry, getCarbonCreditToken } from '@/lib/contracts';
 import { ethers } from 'ethers';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -105,16 +105,30 @@ export default function MeasurementsPage() {
     }
   };
 
-  const handleRetire = async (measurementId: number) => {
+  const handleRetire = async (measurement: Measurement) => {
     if (!wallet.signer) return;
     try {
-      const contract = getMRVRegistry(wallet.signer);
-      const tx = await contract.retireCredits(measurementId, "Uso via Dashboard de Medições", "Relatório Geral");
+      const mrvContract = getMRVRegistry(wallet.signer);
+      
+      // 1. Calculate amount (same logic as contract)
+      const amount = BigInt(measurement.co2Captured) * BigInt(10**18);
+
+      // 2. Approve MRV contract to burn tokens
+      // We need CarbonCreditToken contract instance here.
+      // Importing getCarbonCreditToken at top of file
+      const tokenContract = getCarbonCreditToken(wallet.signer);
+      const mrvAddress = await mrvContract.getAddress();
+      
+      const txApprove = await tokenContract.approve(mrvAddress, amount);
+      await txApprove.wait();
+
+      // 3. Call retireCredits
+      const tx = await mrvContract.retireCredits(measurement.id, "Uso via Dashboard de Medições", "Relatório Geral");
       await tx.wait();
       window.location.reload();
     } catch (error) {
       console.error("Error retiring credits:", error);
-      alert("Erro ao aposentar créditos.");
+      alert("Erro ao aposentar créditos. Verifique se você é o dono do projeto.");
     }
   };
 
@@ -251,7 +265,7 @@ export default function MeasurementsPage() {
                       {m.status === 3 && (
                         <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button 
-                            onClick={() => handleRetire(m.id)} 
+                            onClick={() => handleRetire(m)} 
                             size="sm" 
                             className="h-8 bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-900/20 border-0"
                           >
