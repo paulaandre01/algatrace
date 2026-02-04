@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+}
+
+/* Keyframes need to be defined in standard CSS for now in v4 if not using plugin syntax, 
+   but v4 usually detects them if used in animation. 
+   Explicit definition here for safety. */
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+@layer base {
+  :root {
+    /* Netflix-inspired Dark Palette adapted for Alga */
+    --background: 204 61% 13%; /* #0D2C35 - Credita Deep Blue */
+    --foreground: 0 0% 98%;     /* #fafafa */
+
+    --card: 204 61% 13%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 204 61% 13%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 142 97% 30%; /* #029738 - Credita Green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 204 30% 20%; /* Darker Blue/Gray */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 142.1 70.6% 45.3%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-color: #0D2C35; /* Credita Carbon Deep Blue */
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0D2C35; 
+}
+::-webkit-scrollbar-thumb {
+  background: #029738; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #03b044; 
+}
+
+/* Cinematic Utilities */
+.text-shadow {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.hero-gradient {
+  background: linear-gradient(
+    to top,
+    #0D2C35 0%,
+    transparent 60%,
+    rgba(0,0,0,0.7) 100%
+  );
+}
+
+.card-hover-effect {
+  transition: transform 0.3s ease, z-index 0s;
+}
+.card-hover-effect:hover {
+  transform: scale(1.05);
+  z-index: 50;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
