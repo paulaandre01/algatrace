@@ -44,12 +44,14 @@ export default function ProjectDetailsPage() {
   const [owner, setOwner] = useState<string>('');
   const [isVerifier, setIsVerifier] = useState(false);
   const [activeTab, setActiveTab] = useState<'monitoring' | 'traceability'>('traceability');
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!wallet.isConnected || !wallet.signer || !id) return;
 
       setLoading(true);
+      setNotFound(false);
       try {
         const nftContract = getAlgaeProjectNFT(wallet.signer);
         const mrvContract = getMRVRegistry(wallet.signer);
@@ -89,8 +91,16 @@ export default function ProjectDetailsPage() {
 
         setMeasurements(parsedMeasurements.reverse()); // Show newest first
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching project data:", error);
+        // Check for nonexistent token error
+        if (
+            error.message?.includes("ERC721NonexistentToken") || 
+            error.info?.error?.message?.includes("ERC721NonexistentToken") ||
+            JSON.stringify(error).includes("ERC721NonexistentToken")
+        ) {
+            setNotFound(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -200,6 +210,28 @@ export default function ProjectDetailsPage() {
     );
   }
 
+  if (notFound) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-6 text-center px-4 animate-in fade-in zoom-in duration-500">
+        <div className="bg-red-900/20 p-6 rounded-full border border-red-900/50">
+          <XCircle className="h-16 w-16 text-red-500" />
+        </div>
+        <div className="max-w-md space-y-4">
+          <h2 className="text-2xl font-bold text-white">Projeto não encontrado</h2>
+          <p className="text-zinc-400">
+            O projeto que você está procurando não existe ou foi removido. Isso pode acontecer se os contratos foram reimplantados recentemente.
+          </p>
+          <Link href="/projects">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar para Meus Projetos
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       {/* Header */}
@@ -286,7 +318,14 @@ export default function ProjectDetailsPage() {
                 </div>
                 <div>
                   <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Bioproduto Alvo</span>
-                  <p className="font-semibold text-zinc-200">{getBioproduct()}</p>
+                  <div className="flex flex-col">
+                    <p className="font-semibold text-zinc-200">{getBioproduct()}</p>
+                    {(getBioproduct().toLowerCase().includes('biomassa') || getBioproduct().includes(',')) && (
+                        <span className="inline-block mt-1 w-fit px-2 py-0.5 rounded text-[10px] bg-yellow-900/30 text-yellow-400 border border-yellow-900/50">
+                            Alocação Flexível / Futura
+                        </span>
+                    )}
+                  </div>
                 </div>
               </div>
               
@@ -472,7 +511,7 @@ export default function ProjectDetailsPage() {
                             </span>
                             <span className="flex items-center">
                               <Activity className="w-3 h-3 mr-1.5 text-blue-500" />
-                              <b className="text-white mr-1">{m.co2Captured}</b> kg CO₂
+                              <b className="text-white mr-1">{m.co2Captured}</b> kg CO₂e
                             </span>
                           </div>
                           <p className="text-xs text-zinc-600 mt-2 font-mono">

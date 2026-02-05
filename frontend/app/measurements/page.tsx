@@ -136,25 +136,25 @@ export default function MeasurementsPage() {
     <div className="space-y-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 pt-10">
       
       {/* Header Section */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-950 to-indigo-950 text-white shadow-xl shadow-blue-900/20 p-8 sm:p-10 border border-blue-900/50">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-blue-600/10 blur-3xl"></div>
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-950 to-green-950 text-white shadow-xl shadow-emerald-900/20 p-8 sm:p-10 border border-emerald-900/50">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-emerald-600/10 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-black/40 blur-2xl"></div>
         
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <div className="inline-flex items-center rounded-full bg-blue-900/30 px-3 py-1 text-sm font-medium backdrop-blur-md border border-blue-800 mb-4 text-blue-200">
+              <div className="inline-flex items-center rounded-full bg-emerald-900/30 px-3 py-1 text-sm font-medium backdrop-blur-md border border-emerald-800 mb-4 text-emerald-200">
                 <Activity className="mr-2 h-4 w-4" />
                 <span>Registro Global MRV</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">Medições e Verificações</h1>
-              <p className="text-blue-200/70 mt-2 max-w-2xl text-lg">
+              <p className="text-emerald-200/70 mt-2 max-w-2xl text-lg">
                 Acompanhe o fluxo de dados de todos os projetos registrados na rede.
               </p>
             </div>
             {isVerifier && (
-              <div className="bg-blue-950/50 p-4 rounded-xl backdrop-blur-md border border-blue-800">
-                <p className="text-xs font-semibold uppercase tracking-wider text-blue-400 mb-1">Status da Conta</p>
+              <div className="bg-emerald-950/50 p-4 rounded-xl backdrop-blur-md border border-emerald-800">
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-1">Status da Conta</p>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                   <span className="font-bold text-white">Verificador Autorizado</span>
@@ -197,7 +197,7 @@ export default function MeasurementsPage() {
                   <th className="px-6 py-4 font-semibold">ID / Projeto</th>
                   <th className="px-6 py-4 font-semibold">Data</th>
                   <th className="px-6 py-4 font-semibold text-right">Biomassa (kg)</th>
-                  <th className="px-6 py-4 font-semibold text-right">CO₂ (kg)</th>
+                  <th className="px-6 py-4 font-semibold text-right">CO₂e (kg)</th>
                   <th className="px-6 py-4 font-semibold text-center">Status</th>
                   <th className="px-6 py-4 font-semibold text-right">Ações</th>
                 </tr>

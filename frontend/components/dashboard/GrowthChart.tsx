@@ -61,7 +61,7 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ data }) => {
           stroke="#2563eb" 
           fillOpacity={1} 
           fill="url(#colorCo2)" 
-          name="CO2 (kg)"
+          name="CO₂e (kg)"
         />
       </AreaChart>
     </ResponsiveContainer>

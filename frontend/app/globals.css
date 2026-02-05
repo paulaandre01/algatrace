@@ -63,21 +63,21 @@
     --primary: 142 97% 30%; /* #029738 - Credita Green */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 204 30% 20%; /* Darker Blue/Gray */
+    --secondary: 204 30% 20%; /* Darker Blue/Gray aligned with background */
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 204 30% 20%; /* Aligned with secondary */
+    --muted-foreground: 204 20% 70%;
 
-    --accent: 240 3.7% 15.9%;
+    --accent: 204 30% 25%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 142.1 70.6% 45.3%;
+    --border: 204 30% 25%; /* Visible border on dark blue */
+    --input: 204 30% 20%;
+    --ring: 142 97% 30%;
 
     --radius: 0.5rem;
   }

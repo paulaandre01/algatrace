@@ -1,27 +1,25 @@
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
 
 async function main() {
-  const args = process.argv.slice(2);
-  const recipient = args[0];
+  const accounts = await hre.ethers.getSigners();
+  const sender = accounts[0]; // The pre-funded account
+  const receiverAddress = process.env.RECEIVER_ADDRESS;
 
-  if (!recipient) {
-    console.error("Please provide a recipient address.");
-    console.error("Usage: npx hardhat run scripts/fund.js --network localhost -- <ADDRESS>");
-    return;
+  if (!receiverAddress) {
+    console.error("Please provide a RECEIVER_ADDRESS environment variable.");
+    process.exit(1);
   }
 
-  const [sender] = await ethers.getSigners();
-  const amount = ethers.parseEther("100.0");
-
-  console.log(`Sending 100 ETH from ${sender.address} to ${recipient}...`);
+  console.log(`Sending 10 ETH from ${sender.address} to ${receiverAddress}...`);
 
   const tx = await sender.sendTransaction({
-    to: recipient,
-    value: amount,
+    to: receiverAddress,
+    value: hre.ethers.parseEther("10.0"),
   });
 
   await tx.wait();
-  console.log(`Transferred 100 ETH. Transaction hash: ${tx.hash}`);
+
+  console.log(`Transaction successful! Hash: ${tx.hash}`);
 }
 
 main()

@@ -78,7 +78,7 @@ export default function CreditsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-extrabold text-white tracking-tight">Carteira de Créditos</h1>
-          <p className="text-zinc-400 mt-1">Gerencie e aposente seus créditos de carbono (Token ALGACO2).</p>
+          <p className="text-zinc-400 mt-1">Gerencie e aposente seus créditos de carbono (Token ALGACO2e).</p>
         </div>
       </div>
 
@@ -104,7 +104,7 @@ export default function CreditsPage() {
             <div className="mt-8">
               <div className="flex items-baseline space-x-3">
                 <h2 className="text-6xl font-bold tracking-tighter text-white">{parseFloat(balance).toFixed(2)}</h2>
-                <span className="text-xl text-emerald-400 font-medium bg-emerald-950/50 px-3 py-1 rounded-full backdrop-blur-sm border border-emerald-900">ALGACO2</span>
+                <span className="text-xl text-emerald-400 font-medium bg-emerald-950/50 px-3 py-1 rounded-full backdrop-blur-sm border border-emerald-900">ALGACO2e</span>
               </div>
               <p className="text-emerald-100/50 text-sm mt-4 flex items-center">
                 <TrendingUp className="mr-2 h-4 w-4" />

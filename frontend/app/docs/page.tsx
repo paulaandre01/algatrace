@@ -172,7 +172,7 @@ export default function DocsPage() {
                 <ul className="space-y-3">
                     <li className="flex items-center gap-3 text-sm text-zinc-300 bg-zinc-900 p-2 rounded-lg border border-zinc-800">
                         <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        <span><strong>Conversão:</strong> 1 Token = 1 Tonelada de CO₂eq capturada.</span>
+                        <span><strong>Conversão:</strong> 1 Token = 1 Tonelada de CO₂e capturada.</span>
                     </li>
                     <li className="flex items-center gap-3 text-sm text-zinc-300 bg-zinc-900 p-2 rounded-lg border border-zinc-800">
                         <CheckCircle2 className="h-4 w-4 text-emerald-500" />

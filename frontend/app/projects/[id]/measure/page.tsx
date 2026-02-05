@@ -135,7 +135,7 @@ export default function NewMeasurementPage() {
           </div>
 
           <div className="p-8 bg-slate-50/80 rounded-2xl border border-slate-100 text-center transition-all hover:bg-slate-50">
-            <p className="text-sm font-medium text-slate-500 mb-2 uppercase tracking-wide">CO₂ Capturado Estimado</p>
+            <p className="text-sm font-medium text-slate-500 mb-2 uppercase tracking-wide">CO₂e Capturado Estimado</p>
             <div className="flex items-center justify-center space-x-2">
               <span className="text-5xl font-bold text-green-600 tracking-tight">{co2Captured.toFixed(2)}</span>
               <span className="text-xl text-slate-400 font-medium self-end mb-1">kg</span>

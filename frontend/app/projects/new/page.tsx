@@ -42,7 +42,7 @@ export default function NewProjectPage() {
     try {
       const metadata = {
         name: formData.name,
-        description: `Projeto Credita Carbon: ${formData.algaeType}. Destinado a ${formData.bioproductTarget}.`,
+        description: `Projeto Credita Carbon - ${formData.name}: ${formData.algaeType}. Destinado a ${formData.bioproductTarget}.`,
         attributes: [
           { trait_type: "Location", value: formData.location },
           { trait_type: "Algae Species", value: formData.algaeType },
@@ -170,19 +170,21 @@ export default function NewProjectPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-emerald-400 flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4" />
-                    Bioproduto Vinculado (Destino)
+                    Bioproduto Vinculado / Biomassa
                   </label>
                   <input
                     name="bioproductTarget"
                     value={formData.bioproductTarget}
                     onChange={handleChange}
                     className="w-full bg-black/50 border border-emerald-900/50 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-emerald-900/50"
-                    placeholder="Ex: Biofertilizante Líquido Premium"
+                    placeholder="Ex: Biomassa, Biofertilizante, ou Múltiplos"
                     required
                   />
-                  <p className="text-xs text-emerald-500/70">
-                    Obrigatório para rastreabilidade da cadeia.
-                  </p>
+                  <div className="text-xs text-emerald-500/70 space-y-1 mt-2">
+                    <p>• Defina o destino final (ex: Biofertilizante) se já souber.</p>
+                    <p>• Use <strong>"Biomassa"</strong> para alocação futura ou venda fracionada.</p>
+                    <p>• Use vírgulas para múltiplos produtos (ex: "Óleo, Proteína").</p>
+                  </div>
                 </div>
               </div>
 

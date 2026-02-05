@@ -57,7 +57,7 @@ export default function Home() {
       {/* Hero Section (Netflix Style) */}
       <div className="relative h-[85vh] w-full">
         {/* Background Image / Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-[#141414]/80 to-transparent z-10"></div>
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544634289-537446d3962d?q=80&w=2692&auto=format&fit=crop')] bg-cover bg-center opacity-60"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent z-10"></div>
 
@@ -128,15 +128,16 @@ export default function Home() {
                     </div>
                 </div>
                 <div className="bg-[#1f1f1f] hover:bg-[#2a2a2a] transition-colors p-6 rounded-md group cursor-pointer border border-white/5 hover:border-white/20">
-                    <p className="text-zinc-400 text-sm font-medium uppercase tracking-wider mb-2">CO₂ Capturado Total</p>
+                    <p className="text-zinc-400 text-sm font-medium uppercase tracking-wider mb-2">Redução de CO₂e Total</p>
                     <div className="flex items-end justify-between">
                         <span className="text-4xl font-bold text-white">--</span>
                         <Activity className="h-6 w-6 text-purple-500 mb-2 opacity-80" />
                     </div>
                 </div>
                  <div className="bg-gradient-to-br from-emerald-900/50 to-emerald-800/20 hover:from-emerald-900/70 transition-colors p-6 rounded-md group cursor-pointer border border-emerald-500/20 flex flex-col justify-center items-center text-center">
-                    <p className="text-emerald-400 text-sm font-bold uppercase tracking-wider mb-1">Mercado Beta</p>
-                    <span className="text-2xl font-bold text-white">Em Breve</span>
+                    <p className="text-emerald-400 text-sm font-bold uppercase tracking-wider mb-1">Mercado & Investimentos</p>
+                    <span className="text-xl font-bold text-white">Tokens de Projeto</span>
+                    <span className="text-xs text-zinc-400 mt-1">(Em Breve)</span>
                 </div>
             </div>
         </section>

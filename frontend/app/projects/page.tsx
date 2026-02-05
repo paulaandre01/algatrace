@@ -39,28 +39,38 @@ export default function ProjectsPage() {
       try {
         const contract = getAlgaeProjectNFT(wallet.signer);
         const balance = await contract.balanceOf(wallet.address);
+        console.log(`Fetching projects... Balance: ${balance.toString()}`);
         
         const fetchedProjects: Project[] = [];
-        for (let i = 0; i < balance; i++) {
-          const tokenId = await contract.tokenOfOwnerByIndex(wallet.address, i);
-          const uri = await contract.tokenURI(tokenId);
-          
-          let metadata: ProjectMetadata | undefined;
-          if (uri.startsWith('data:application/json;base64,')) {
-            try {
-              const base64 = uri.split(',')[1];
-              const json = atob(base64);
-              metadata = JSON.parse(json);
-            } catch (e) {
-              console.error("Error parsing metadata for token", tokenId, e);
-            }
-          }
+        const bal = Number(balance); // Safe cast for UI purposes
 
-          fetchedProjects.push({
-            id: Number(tokenId),
-            uri,
-            metadata,
-          });
+        for (let i = 0; i < bal; i++) {
+          try {
+            const tokenId = await contract.tokenOfOwnerByIndex(wallet.address, i);
+            const uri = await contract.tokenURI(tokenId);
+            
+            let metadata: ProjectMetadata | undefined;
+            if (uri.startsWith('data:application/json;base64,')) {
+              try {
+                const base64 = uri.split(',')[1];
+                const json = atob(base64);
+                metadata = JSON.parse(json);
+              } catch (e) {
+                console.error("Error parsing metadata for token", tokenId, e);
+              }
+            } else {
+                // Handle non-base64 URIs (e.g., ipfs:// or http://)
+                console.warn(`Token ${tokenId} has non-base64 URI: ${uri}`);
+            }
+
+            fetchedProjects.push({
+              id: Number(tokenId),
+              uri,
+              metadata,
+            });
+          } catch (innerError) {
+             console.error(`Error fetching token at index ${i}:`, innerError);
+          }
         }
         setProjects(fetchedProjects);
       } catch (error) {
@@ -131,7 +141,7 @@ export default function ProjectsPage() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => {
             const location = project.metadata?.attributes.find(a => a.trait_type === "Location")?.value;
-            const algaeType = project.metadata?.attributes.find(a => a.trait_type === "Algae Type")?.value;
+            const algaeType = project.metadata?.attributes.find(a => a.trait_type === "Algae Type" || a.trait_type === "Algae Species")?.value;
 
             return (
               <Card key={project.id} className="group hover:scale-105 transition-all duration-300 border-zinc-800 bg-zinc-900/80 overflow-hidden">

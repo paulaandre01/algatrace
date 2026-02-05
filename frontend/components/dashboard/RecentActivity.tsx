@@ -47,7 +47,7 @@ export const RecentActivity = () => {
             id: log.transactionHash,
             type: 'measurement',
             title: 'Nova Medição',
-            description: `Projeto #${log.args[1]} registrou ${log.args[2]}kg de CO₂`,
+            description: `Projeto #${log.args[1]} registrou ${log.args[2]}kg de CO₂e`,
             timestamp: new Date(block.timestamp * 1000),
             hash: log.transactionHash
           });
