@@ -129,7 +129,7 @@ export default function Home() {
                     </div>
                 </div>
                 <div className="bg-card hover:bg-secondary/50 transition-colors p-6 rounded-md group cursor-pointer border border-border hover:border-primary/50">
-                    <p className="text-muted-foreground text-sm font-medium uppercase tracking-wider mb-2">Redução de CO₂<span className="text-[0.6em] align-baseline normal-case">e</span> Total</p>
+                    <p className="text-muted-foreground text-sm font-medium tracking-wider mb-2"><span className="uppercase">Redução de CO₂</span><span className="text-[0.6em] align-baseline">e</span> <span className="uppercase">Total</span></p>
                     <div className="flex items-end justify-between">
                         <span className="text-4xl font-bold text-foreground">--</span>
                         <Activity className="h-6 w-6 text-primary mb-2 opacity-80" />
