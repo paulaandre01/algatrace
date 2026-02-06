@@ -36,8 +36,10 @@ export default function NewProjectPage() {
       return;
     }
 
-    if (wallet.chainId !== 31337) {
-        alert("Você parece estar na rede errada. Por favor, mude para Localhost 8545 (Chain ID 31337).");
+    const targetChainId = Number(process.env.NEXT_PUBLIC_TARGET_CHAIN_ID || 31337);
+    if (wallet.chainId !== targetChainId) {
+        const networkName = targetChainId === 11155111 ? "Sepolia Testnet" : "Localhost 8545";
+        alert(`Você parece estar na rede errada. Por favor, mude para ${networkName} (Chain ID ${targetChainId}).`);
         return;
     }
 

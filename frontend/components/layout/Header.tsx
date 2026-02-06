@@ -6,7 +6,8 @@ import { Bell, Search, Menu, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export function Header() {
-  const { isConnected, address, connect, chainId, switchToLocalhost } = useWallet();
+  const { isConnected, address, connect, chainId, switchNetwork } = useWallet();
+  const targetChainId = Number(process.env.NEXT_PUBLIC_TARGET_CHAIN_ID || 31337);
 
   return (
     <header className="sticky top-0 z-40 w-full h-20 bg-gradient-to-b from-background/90 to-transparent transition-all duration-300">
@@ -35,12 +36,12 @@ export function Header() {
           </button>
 
           <div className="flex items-center gap-2">
-            {isConnected && chainId !== 31337 && (
+            {isConnected && chainId !== targetChainId && (
               <Button
-                onClick={switchToLocalhost}
+                onClick={switchNetwork}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-sm px-4 py-1.5 text-xs transition-colors"
               >
-                Conectar ao Localhost
+                Trocar Rede
               </Button>
             )}
             {!isConnected ? (
