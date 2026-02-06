@@ -7,6 +7,7 @@ import { getAlgaeProjectNFT, getCarbonCreditToken, getMRVRegistry } from '@/lib/
 import { ethers } from 'ethers';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { RecentActivity } from '@/components/dashboard/RecentActivity';
 
 export default function Home() {
   const { wallet } = useWallet();
@@ -52,25 +53,25 @@ export default function Home() {
   }, [wallet.isConnected, wallet.signer, wallet.address]);
 
   return (
-    <div className="pb-20 bg-[#141414] min-h-screen">
+    <div className="pb-20 bg-background min-h-screen">
       
       {/* Hero Section (Netflix Style) */}
       <div className="relative h-[85vh] w-full">
         {/* Background Image / Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-[#141414]/80 to-transparent z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent z-10"></div>
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544634289-537446d3962d?q=80&w=2692&auto=format&fit=crop')] bg-cover bg-center opacity-60"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10"></div>
 
         <div className="relative z-20 flex flex-col justify-center h-full px-8 md:px-16 max-w-4xl space-y-6">
             <div className="flex items-center space-x-2 mb-4">
-                 <span className="text-emerald-500 font-bold tracking-widest text-sm uppercase">Original Alga Beta</span>
+                 <span className="text-primary font-bold tracking-widest text-sm uppercase">Original Alga Beta</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight drop-shadow-lg">
+            <h1 className="text-5xl md:text-7xl font-extrabold text-foreground tracking-tight drop-shadow-lg">
                 {heroProject ? heroProject.name : "Inicie Sua Jornada"}
             </h1>
             
-            <p className="text-lg md:text-xl text-white/90 max-w-2xl font-medium drop-shadow-md">
+            <p className="text-lg md:text-xl text-foreground/90 max-w-2xl font-medium drop-shadow-md">
                 {heroProject 
                     ? heroProject.description 
                     : "A revolução da captura de carbono começa aqui. Registre seu primeiro projeto de algas e monitore o impacto ambiental em tempo real na blockchain."}
@@ -80,21 +81,21 @@ export default function Home() {
                 {heroProject ? (
                     <>
                         <Link href={`/projects/${heroProject.id}`}>
-                            <Button className="bg-white text-black hover:bg-white/90 font-bold text-lg px-8 py-6 rounded flex items-center gap-3 transition-transform hover:scale-105">
-                                <Play className="h-6 w-6 fill-black" />
+                            <Button className="bg-foreground text-background hover:bg-foreground/90 font-bold text-lg px-8 py-6 rounded flex items-center gap-3 transition-transform hover:scale-105">
+                                <Play className="h-6 w-6 fill-background" />
                                 Monitorar Agora
                             </Button>
                         </Link>
                         <Link href="/docs">
-                             <Button variant="secondary" className="bg-zinc-600/70 text-white hover:bg-zinc-600/90 font-bold text-lg px-8 py-6 rounded flex items-center gap-3 backdrop-blur-sm transition-transform hover:scale-105">
+                             <Button variant="secondary" className="bg-secondary/70 text-foreground hover:bg-secondary/90 font-bold text-lg px-8 py-6 rounded flex items-center gap-3 backdrop-blur-sm transition-transform hover:scale-105">
                                 <Info className="h-6 w-6" />
                                 Metodologia
                             </Button>
                         </Link>
                     </>
                 ) : (
-                     <Link href="/projects/new">
-                        <Button className="bg-emerald-600 text-white hover:bg-emerald-700 font-bold text-lg px-8 py-6 rounded flex items-center gap-3 transition-transform hover:scale-105 shadow-[0_0_20px_rgba(5,150,105,0.5)]">
+                    <Link href="/projects/new">
+                        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg px-8 py-6 rounded flex items-center gap-3 transition-transform hover:scale-105 shadow-lg shadow-primary/50">
                             <Plus className="h-6 w-6" />
                             Criar Primeiro Projeto
                         </Button>
@@ -109,54 +110,54 @@ export default function Home() {
         
         {/* Stats Rail */}
         <section>
-            <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2 group cursor-pointer">
-                Suas Estatísticas <ChevronRight className="h-4 w-4 text-white/50 group-hover:text-white transition-colors opacity-0 group-hover:opacity-100" />
+            <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2 group cursor-pointer">
+                Suas Estatísticas <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors opacity-0 group-hover:opacity-100" />
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[#1f1f1f] hover:bg-[#2a2a2a] transition-colors p-6 rounded-md group cursor-pointer border border-white/5 hover:border-white/20">
-                    <p className="text-zinc-400 text-sm font-medium uppercase tracking-wider mb-2">Projetos Ativos</p>
+                <div className="bg-card hover:bg-secondary/50 transition-colors p-6 rounded-md group cursor-pointer border border-border hover:border-primary/50">
+                    <p className="text-muted-foreground text-sm font-medium uppercase tracking-wider mb-2">Projetos Ativos</p>
                     <div className="flex items-end justify-between">
-                        <span className="text-4xl font-bold text-white">{loading ? "-" : projectCount}</span>
-                        <Leaf className="h-6 w-6 text-emerald-500 mb-2 opacity-80" />
+                        <span className="text-4xl font-bold text-foreground">{loading ? "-" : projectCount}</span>
+                        <Leaf className="h-6 w-6 text-primary mb-2 opacity-80" />
                     </div>
                 </div>
-                <div className="bg-[#1f1f1f] hover:bg-[#2a2a2a] transition-colors p-6 rounded-md group cursor-pointer border border-white/5 hover:border-white/20">
-                    <p className="text-zinc-400 text-sm font-medium uppercase tracking-wider mb-2">Saldo de Créditos</p>
+                <div className="bg-card hover:bg-secondary/50 transition-colors p-6 rounded-md group cursor-pointer border border-border hover:border-primary/50">
+                    <p className="text-muted-foreground text-sm font-medium uppercase tracking-wider mb-2">Saldo de Créditos</p>
                     <div className="flex items-end justify-between">
-                        <span className="text-4xl font-bold text-white">{loading ? "-" : parseFloat(creditBalance).toFixed(1)}</span>
-                        <Wind className="h-6 w-6 text-blue-500 mb-2 opacity-80" />
+                        <span className="text-4xl font-bold text-foreground">{loading ? "-" : parseFloat(creditBalance).toFixed(1)}</span>
+                        <Wind className="h-6 w-6 text-primary mb-2 opacity-80" />
                     </div>
                 </div>
-                <div className="bg-[#1f1f1f] hover:bg-[#2a2a2a] transition-colors p-6 rounded-md group cursor-pointer border border-white/5 hover:border-white/20">
-                    <p className="text-zinc-400 text-sm font-medium uppercase tracking-wider mb-2">Redução de CO₂e Total</p>
+                <div className="bg-card hover:bg-secondary/50 transition-colors p-6 rounded-md group cursor-pointer border border-border hover:border-primary/50">
+                    <p className="text-muted-foreground text-sm font-medium uppercase tracking-wider mb-2">Redução de CO₂<span className="text-[0.6em] align-baseline">e</span> Total</p>
                     <div className="flex items-end justify-between">
-                        <span className="text-4xl font-bold text-white">--</span>
-                        <Activity className="h-6 w-6 text-purple-500 mb-2 opacity-80" />
+                        <span className="text-4xl font-bold text-foreground">--</span>
+                        <Activity className="h-6 w-6 text-primary mb-2 opacity-80" />
                     </div>
                 </div>
-                 <div className="bg-gradient-to-br from-emerald-900/50 to-emerald-800/20 hover:from-emerald-900/70 transition-colors p-6 rounded-md group cursor-pointer border border-emerald-500/20 flex flex-col justify-center items-center text-center">
-                    <p className="text-emerald-400 text-sm font-bold uppercase tracking-wider mb-1">Mercado & Investimentos</p>
-                    <span className="text-xl font-bold text-white">Tokens de Projeto</span>
-                    <span className="text-xs text-zinc-400 mt-1">(Em Breve)</span>
+                 <div className="bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/20 transition-colors p-6 rounded-md group cursor-pointer border border-primary/20 flex flex-col justify-center items-center text-center">
+                    <p className="text-primary text-sm font-bold uppercase tracking-wider mb-1">Mercado & Investimentos</p>
+                    <span className="text-xl font-bold text-foreground">Tokens de Projeto</span>
+                    <span className="text-xs text-muted-foreground mt-1">(Em Breve)</span>
                 </div>
             </div>
         </section>
 
         {/* Projects Rail */}
         <section>
-            <h3 className="text-xl font-semibold text-white mb-4">Meus Projetos</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-4">Meus Projetos</h3>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                  {/* Project Card Mockup */}
                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="min-w-[280px] h-[160px] bg-zinc-800 rounded-md relative overflow-hidden group cursor-pointer transition-transform hover:scale-105 hover:z-50 duration-300">
-                        <div className={`absolute inset-0 bg-gradient-to-br ${i === 1 ? 'from-emerald-800 to-zinc-900' : 'from-blue-900 to-zinc-900'}`}></div>
+                    <div key={i} className="min-w-[280px] h-[160px] bg-card rounded-md relative overflow-hidden group cursor-pointer transition-transform hover:scale-105 hover:z-50 duration-300 border border-border">
+                        <div className={`absolute inset-0 bg-gradient-to-br ${i === 1 ? 'from-primary/30 to-background' : 'from-primary/20 to-background'}`}></div>
                         <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-10 transition-opacity">
-                            <Leaf className="h-16 w-16 text-white" />
+                            <Leaf className="h-16 w-16 text-foreground" />
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
-                            <h4 className="text-white font-bold text-lg">Projeto #{i}</h4>
-                            <p className="text-green-400 text-xs font-semibold flex items-center mt-1">
-                                <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background/80 to-transparent">
+                            <h4 className="text-foreground font-bold text-lg">Projeto #{i}</h4>
+                            <p className="text-primary text-xs font-semibold flex items-center mt-1">
+                                <span className="h-2 w-2 rounded-full bg-primary mr-2 animate-pulse"></span>
                                 98% Compatível
                             </p>
                         </div>
@@ -165,11 +166,19 @@ export default function Home() {
                  
                  {/* Add New Project Card */}
                  <Link href="/projects/new">
-                    <div className="min-w-[280px] h-[160px] bg-zinc-900 border-2 border-dashed border-zinc-700 rounded-md flex flex-col items-center justify-center text-zinc-500 hover:text-white hover:border-white hover:bg-zinc-800 transition-all cursor-pointer">
+                    <div className="min-w-[280px] h-[160px] bg-card border-2 border-dashed border-border rounded-md flex flex-col items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground hover:bg-secondary transition-all cursor-pointer">
                         <Plus className="h-8 w-8 mb-2" />
                         <span className="font-medium">Adicionar Projeto</span>
                     </div>
                  </Link>
+            </div>
+        </section>
+
+        {/* Recent Activity Section */}
+        <section className="pb-10">
+            <h3 className="text-xl font-semibold text-foreground mb-4">Atividade Global da Rede</h3>
+            <div className="h-[400px]">
+                <RecentActivity />
             </div>
         </section>
 

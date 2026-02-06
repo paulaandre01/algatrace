@@ -26,7 +26,7 @@ export function Sidebar() {
       <div className="mb-6 flex justify-center w-full">
         <div className="h-64 w-full relative shrink-0 overflow-hidden">
            <Image 
-             src="/logo-v4.png" 
+             src="/logo-new.png" 
              alt="Credita Carbon Logo" 
              fill
              className="object-contain scale-125"

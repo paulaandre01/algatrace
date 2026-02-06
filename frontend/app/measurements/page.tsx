@@ -136,28 +136,28 @@ export default function MeasurementsPage() {
     <div className="space-y-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 pt-10">
       
       {/* Header Section */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-950 to-green-950 text-white shadow-xl shadow-emerald-900/20 p-8 sm:p-10 border border-emerald-900/50">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-emerald-600/10 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-black/40 blur-2xl"></div>
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/20 to-secondary text-foreground shadow-xl shadow-primary/10 p-8 sm:p-10 border border-border">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-secondary/40 blur-2xl"></div>
         
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <div className="inline-flex items-center rounded-full bg-emerald-900/30 px-3 py-1 text-sm font-medium backdrop-blur-md border border-emerald-800 mb-4 text-emerald-200">
+              <div className="inline-flex items-center rounded-full bg-primary/20 px-3 py-1 text-sm font-medium backdrop-blur-md border border-primary/30 mb-4 text-primary">
                 <Activity className="mr-2 h-4 w-4" />
                 <span>Registro Global MRV</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">Medições e Verificações</h1>
-              <p className="text-emerald-200/70 mt-2 max-w-2xl text-lg">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Medições e Verificações</h1>
+              <p className="text-muted-foreground mt-2 max-w-2xl text-lg">
                 Acompanhe o fluxo de dados de todos os projetos registrados na rede.
               </p>
             </div>
             {isVerifier && (
-              <div className="bg-emerald-950/50 p-4 rounded-xl backdrop-blur-md border border-emerald-800">
-                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-1">Status da Conta</p>
+              <div className="bg-secondary/50 p-4 rounded-xl backdrop-blur-md border border-border">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Status da Conta</p>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                  <span className="font-bold text-white">Verificador Autorizado</span>
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  <span className="font-bold text-foreground">Verificador Autorizado</span>
                 </div>
               </div>
             )}
@@ -166,12 +166,12 @@ export default function MeasurementsPage() {
       </div>
 
       {/* Main Content */}
-      <Card className="border-zinc-800 shadow-xl shadow-black/50 overflow-hidden backdrop-blur-sm bg-zinc-900/80">
-        <div className="p-6 border-b border-zinc-800 bg-zinc-900/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2 text-zinc-300">
-            <Search className="h-5 w-5 text-zinc-500" />
+      <Card className="border-border shadow-xl shadow-primary/5 overflow-hidden backdrop-blur-sm bg-card/80">
+        <div className="p-6 border-b border-border bg-secondary/20 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Search className="h-5 w-5 text-muted-foreground" />
             <span className="font-medium">Histórico Recente</span>
-            <span className="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full text-xs font-bold border border-zinc-700">{measurements.length}</span>
+            <span className="bg-secondary text-muted-foreground px-2 py-0.5 rounded-full text-xs font-bold border border-border">{measurements.length}</span>
           </div>
           
           <div className="flex gap-2">
@@ -181,18 +181,18 @@ export default function MeasurementsPage() {
 
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-12 text-center text-zinc-500">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+            <div className="p-12 text-center text-muted-foreground">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
               <p>Carregando dados da blockchain...</p>
             </div>
           ) : measurements.length === 0 ? (
-            <div className="p-12 text-center text-zinc-500">
-              <Activity className="h-12 w-12 mx-auto text-zinc-700 mb-3" />
+            <div className="p-12 text-center text-muted-foreground">
+              <Activity className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
               <p>Nenhuma medição registrada ainda.</p>
             </div>
           ) : (
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-zinc-400 uppercase bg-zinc-900/80 border-b border-zinc-800">
+              <thead className="text-xs text-muted-foreground uppercase bg-secondary/50 border-b border-border">
                 <tr>
                   <th className="px-6 py-4 font-semibold">ID / Projeto</th>
                   <th className="px-6 py-4 font-semibold">Data</th>
@@ -202,39 +202,39 @@ export default function MeasurementsPage() {
                   <th className="px-6 py-4 font-semibold text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-border">
                 {measurements.map((m) => (
-                  <tr key={m.id} className="hover:bg-zinc-800/50 transition-colors group">
-                    <td className="px-6 py-4 font-medium text-white">
+                  <tr key={m.id} className="hover:bg-secondary/30 transition-colors group">
+                    <td className="px-6 py-4 font-medium text-foreground">
                       <div className="flex flex-col">
-                        <span className="text-xs text-zinc-500 mb-0.5">#{m.id}</span>
-                        <Link href={`/projects/${m.projectId}`} className="hover:text-emerald-400 transition-colors text-zinc-300">
+                        <span className="text-xs text-muted-foreground mb-0.5">#{m.id}</span>
+                        <Link href={`/projects/${m.projectId}`} className="hover:text-primary transition-colors text-muted-foreground">
                           Projeto #{m.projectId}
                         </Link>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-zinc-400">
+                    <td className="px-6 py-4 text-muted-foreground">
                       <div className="flex items-center gap-2">
-                        <Clock className="h-3.5 w-3.5 text-zinc-600" />
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground/70" />
                         {new Date(m.timestamp * 1000).toLocaleDateString('pt-BR')}
                       </div>
-                      <div className="text-xs text-zinc-600 pl-5.5">
+                      <div className="text-xs text-muted-foreground/70 pl-5.5">
                         {new Date(m.timestamp * 1000).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right font-mono text-zinc-300">
+                    <td className="px-6 py-4 text-right font-mono text-muted-foreground">
                       {m.biomassAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="px-6 py-4 text-right font-mono font-medium text-emerald-400">
+                    <td className="px-6 py-4 text-right font-mono font-medium text-primary">
                       {m.co2Captured.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                        m.status === 0 ? 'bg-yellow-900/20 text-yellow-400 border-yellow-900/50' :
-                        m.status === 1 ? 'bg-blue-900/20 text-blue-400 border-blue-900/50' :
-                        m.status === 2 ? 'bg-red-900/20 text-red-400 border-red-900/50' :
-                        m.status === 3 ? 'bg-emerald-900/20 text-emerald-400 border-emerald-900/50' :
-                        'bg-purple-900/20 text-purple-400 border-purple-900/50'
+                        m.status === 0 ? 'bg-secondary text-muted-foreground border-border' :
+                        m.status === 1 ? 'bg-primary/10 text-primary border-primary/20' :
+                        m.status === 2 ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                        m.status === 3 ? 'bg-primary/20 text-primary border-primary/30' :
+                        'bg-destructive/10 text-destructive border-destructive/20'
                       }`}>
                         {STATUS_LABELS[m.status]}
                       </span>
@@ -245,7 +245,7 @@ export default function MeasurementsPage() {
                           <Button 
                             onClick={() => handleVerify(m.id)} 
                             size="sm" 
-                            className="h-8 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-900/20 border-0"
+                            className="h-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 border-0"
                           >
                             Verificar
                           </Button>
@@ -256,7 +256,7 @@ export default function MeasurementsPage() {
                           <Button 
                             onClick={() => handleIssueCredits(m.id)} 
                             size="sm" 
-                            className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-900/20 border-0"
+                            className="h-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 border-0"
                           >
                             Emitir Créditos
                           </Button>
@@ -267,7 +267,7 @@ export default function MeasurementsPage() {
                           <Button 
                             onClick={() => handleRetire(m)} 
                             size="sm" 
-                            className="h-8 bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-900/20 border-0"
+                            className="h-8 bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-md shadow-destructive/20 border-0"
                           >
                             <Flame className="w-3 h-3 mr-1.5" />
                             Aposentar

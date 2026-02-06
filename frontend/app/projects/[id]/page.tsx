@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Leaf, Activity, CheckCircle2, XCircle, Clock, MapPin, History, Play, Factory, Truck, Droplets, ArrowRight, Flame } from 'lucide-react';
 import { useWallet } from '@/hooks/useWallet';
-import { getAlgaeProjectNFT, getMRVRegistry } from '@/lib/contracts';
+import { getAlgaeProjectNFT, getMRVRegistry, getCarbonCreditToken } from '@/lib/contracts';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
@@ -30,7 +30,13 @@ interface ProjectMetadata {
 }
 
 const STATUS_LABELS = ['Pendente', 'Verificado', 'Rejeitado', 'Creditado', 'Aposentado'];
-const STATUS_COLORS = ['text-yellow-400 bg-yellow-900/30 border-yellow-700/50', 'text-blue-400 bg-blue-900/30 border-blue-700/50', 'text-red-400 bg-red-900/30 border-red-700/50', 'text-emerald-400 bg-emerald-900/30 border-emerald-700/50', 'text-purple-400 bg-purple-900/30 border-purple-700/50'];
+const STATUS_COLORS = [
+  'text-muted-foreground bg-secondary border-border',
+  'text-primary bg-primary/10 border-primary/20',
+  'text-destructive bg-destructive/10 border-destructive/20',
+  'text-primary bg-primary/20 border-primary/30',
+  'text-destructive bg-destructive/10 border-destructive/20'
+];
 
 export default function ProjectDetailsPage() {
   const params = useParams();
@@ -148,17 +154,36 @@ export default function ProjectDetailsPage() {
   };
 
   const handleRetire = async (measurementId: number) => {
-    if (!wallet.signer) return;
+    if (!wallet.signer || !wallet.address) return;
     setActionLoading(true);
     try {
-      const contract = getMRVRegistry(wallet.signer);
-      // Assuming retireCredits exists in the contract for the Beta scope
-      const tx = await contract.retireCredits(measurementId, "Uso interno Beta", "Relatório ESG 2024");
+      const registryContract = getMRVRegistry(wallet.signer);
+      const tokenContract = getCarbonCreditToken(wallet.signer);
+      
+      // Get measurement details to calculate amount
+      const m = measurements.find(meas => meas.id === measurementId);
+      if (!m) throw new Error("Measurement not found");
+
+      const amount = ethers.parseUnits(m.co2Captured.toString(), 18);
+
+      // 1. Approve MRVRegistry to spend tokens
+      // Check allowance first to avoid unnecessary tx if already approved
+      const registryAddress = await registryContract.getAddress();
+      const currentAllowance = await tokenContract.allowance(wallet.address, registryAddress);
+      
+      if (currentAllowance < amount) {
+          console.log("Approving tokens...");
+          const approveTx = await tokenContract.approve(registryAddress, amount);
+          await approveTx.wait();
+      }
+
+      // 2. Retire credits
+      const tx = await registryContract.retireCredits(measurementId, "Uso interno Beta", "Relatório ESG 2024");
       await tx.wait();
       window.location.reload();
     } catch (error) {
       console.error("Error retiring credits:", error);
-      alert("Erro ao aposentar créditos. Verifique se a função está disponível no contrato.");
+      alert("Erro ao aposentar créditos. Verifique se você é o dono do projeto e tem saldo.");
     } finally {
         setActionLoading(false);
     }
@@ -197,12 +222,12 @@ export default function ProjectDetailsPage() {
   if (!wallet.isConnected) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-6 text-center px-4 animate-in fade-in zoom-in duration-500">
-        <div className="bg-emerald-900/20 p-6 rounded-full border border-emerald-900/50">
-          <Leaf className="h-16 w-16 text-emerald-500" />
+        <div className="bg-primary/10 p-6 rounded-full border border-primary/20">
+          <Leaf className="h-16 w-16 text-primary" />
         </div>
         <div className="max-w-md space-y-2">
-          <h2 className="text-2xl font-bold text-white">Conecte sua carteira</h2>
-          <p className="text-zinc-400">
+          <h2 className="text-2xl font-bold text-foreground">Conecte sua carteira</h2>
+          <p className="text-muted-foreground">
             Conecte sua carteira para visualizar os detalhes deste projeto e a rastreabilidade completa.
           </p>
         </div>
@@ -213,16 +238,16 @@ export default function ProjectDetailsPage() {
   if (notFound) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-6 text-center px-4 animate-in fade-in zoom-in duration-500">
-        <div className="bg-red-900/20 p-6 rounded-full border border-red-900/50">
-          <XCircle className="h-16 w-16 text-red-500" />
+        <div className="bg-destructive/10 p-6 rounded-full border border-destructive/20">
+          <XCircle className="h-16 w-16 text-destructive" />
         </div>
         <div className="max-w-md space-y-4">
-          <h2 className="text-2xl font-bold text-white">Projeto não encontrado</h2>
-          <p className="text-zinc-400">
+          <h2 className="text-2xl font-bold text-foreground">Projeto não encontrado</h2>
+          <p className="text-muted-foreground">
             O projeto que você está procurando não existe ou foi removido. Isso pode acontecer se os contratos foram reimplantados recentemente.
           </p>
           <Link href="/projects">
-            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Voltar para Meus Projetos
             </Button>
@@ -238,17 +263,17 @@ export default function ProjectDetailsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
             <Link href="/projects">
-            <Button variant="ghost" size="sm" className="rounded-full text-zinc-400 hover:text-white hover:bg-white/10">
+            <Button variant="ghost" size="sm" className="rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar
             </Button>
             </Link>
             <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">
                 {metadata?.name || `Projeto #${id}`}
             </h1>
-            <p className="text-zinc-400 mt-1 flex items-center gap-2">
-                <span className="bg-emerald-900/30 text-emerald-400 px-2 py-0.5 rounded text-xs border border-emerald-900/50">Beta v0.1</span>
+            <p className="text-muted-foreground mt-1 flex items-center gap-2">
+                <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs border border-primary/20">Beta v0.1</span>
                 <span>•</span>
                 <span>Detalhes do projeto e rastreabilidade</span>
             </p>
@@ -258,7 +283,7 @@ export default function ProjectDetailsPage() {
              <Button 
                 onClick={handleSimulateMeasurement} 
                 disabled={actionLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-900/20 border border-blue-500/50"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 border border-primary/50"
              >
                 {actionLoading ? (
                     <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
@@ -273,55 +298,55 @@ export default function ProjectDetailsPage() {
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Left Column: Info & Actions */}
         <div className="lg:col-span-1 space-y-6">
-          <Card className="border-white/10 bg-black/40 backdrop-blur-sm overflow-hidden">
-            <div className="h-1.5 bg-gradient-to-r from-emerald-600 to-green-400 w-full"></div>
+          <Card className="border-border bg-card/40 backdrop-blur-sm overflow-hidden">
+            <div className="h-1.5 bg-gradient-to-r from-primary to-primary/80 w-full"></div>
             <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                    <Leaf className="h-5 w-5 text-emerald-500" />
+                <CardTitle className="text-foreground flex items-center gap-2">
+                    <Leaf className="h-5 w-5 text-primary" />
                     Dados do Projeto
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-start">
-                <div className="bg-emerald-900/20 p-2.5 rounded-lg mr-3 border border-emerald-900/30">
-                  <Leaf className="h-5 w-5 text-emerald-500" />
+                <div className="bg-primary/10 p-2.5 rounded-lg mr-3 border border-primary/20">
+                  <Leaf className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Espécie</span>
-                  <p className="font-semibold text-zinc-200">{getAlgaeType() || "N/A"}</p>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Espécie</span>
+                  <p className="font-semibold text-foreground">{getAlgaeType() || "N/A"}</p>
                 </div>
               </div>
               
               <div className="flex items-start">
-                <div className="bg-blue-900/20 p-2.5 rounded-lg mr-3 border border-blue-900/30">
-                  <MapPin className="h-5 w-5 text-blue-500" />
+                <div className="bg-primary/10 p-2.5 rounded-lg mr-3 border border-primary/20">
+                  <MapPin className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Localização</span>
-                  <p className="font-semibold text-zinc-200">{getLocation() || "N/A"}</p>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Localização</span>
+                  <p className="font-semibold text-foreground">{getLocation() || "N/A"}</p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <div className="bg-orange-900/20 p-2.5 rounded-lg mr-3 border border-orange-900/30">
-                  <Factory className="h-5 w-5 text-orange-500" />
+                <div className="bg-secondary p-2.5 rounded-lg mr-3 border border-border">
+                  <Factory className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Capacidade</span>
-                  <p className="font-semibold text-zinc-200">{getCapacity() ? `${getCapacity()} t/ano` : "N/A"}</p>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Capacidade</span>
+                  <p className="font-semibold text-foreground">{getCapacity() ? `${getCapacity()} t/ano` : "N/A"}</p>
                 </div>
               </div>
 
                <div className="flex items-start">
-                <div className="bg-purple-900/20 p-2.5 rounded-lg mr-3 border border-purple-900/30">
-                  <Droplets className="h-5 w-5 text-purple-500" />
+                <div className="bg-secondary p-2.5 rounded-lg mr-3 border border-border">
+                  <Droplets className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Bioproduto Alvo</span>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Bioproduto Alvo</span>
                   <div className="flex flex-col">
-                    <p className="font-semibold text-zinc-200">{getBioproduct()}</p>
+                    <p className="font-semibold text-foreground">{getBioproduct()}</p>
                     {(getBioproduct().toLowerCase().includes('biomassa') || getBioproduct().includes(',')) && (
-                        <span className="inline-block mt-1 w-fit px-2 py-0.5 rounded text-[10px] bg-yellow-900/30 text-yellow-400 border border-yellow-900/50">
+                        <span className="inline-block mt-1 w-fit px-2 py-0.5 rounded text-[10px] bg-secondary text-muted-foreground border border-border">
                             Alocação Flexível / Futura
                         </span>
                     )}
@@ -329,9 +354,9 @@ export default function ProjectDetailsPage() {
                 </div>
               </div>
               
-              <div className="pt-6 border-t border-white/5">
-                <p className="text-xs text-zinc-500 mb-2 font-medium">OWNER</p>
-                <div className="bg-black/50 p-3 rounded-lg border border-white/5 font-mono text-xs text-zinc-400 break-all">
+              <div className="pt-6 border-t border-border">
+                <p className="text-xs text-muted-foreground mb-2 font-medium">OWNER</p>
+                <div className="bg-secondary/50 p-3 rounded-lg border border-border font-mono text-xs text-muted-foreground break-all">
                     {owner}
                 </div>
               </div>
@@ -343,12 +368,12 @@ export default function ProjectDetailsPage() {
         <div className="lg:col-span-2 space-y-6">
             
             {/* Tabs */}
-            <div className="flex space-x-1 bg-black/40 p-1 rounded-xl border border-white/10 w-fit">
+            <div className="flex space-x-1 bg-muted p-1 rounded-xl border border-border w-fit">
                 <button
                     onClick={() => setActiveTab('traceability')}
                     className={cn(
                         "px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                        activeTab === 'traceability' ? "bg-emerald-600 text-white shadow-lg" : "text-zinc-400 hover:text-white hover:bg-white/5"
+                        activeTab === 'traceability' ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                     )}
                 >
                     Rastreabilidade da Cadeia
@@ -357,7 +382,7 @@ export default function ProjectDetailsPage() {
                     onClick={() => setActiveTab('monitoring')}
                     className={cn(
                         "px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                        activeTab === 'monitoring' ? "bg-emerald-600 text-white shadow-lg" : "text-zinc-400 hover:text-white hover:bg-white/5"
+                        activeTab === 'monitoring' ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                     )}
                 >
                     Monitoramento de Crescimento
@@ -365,51 +390,51 @@ export default function ProjectDetailsPage() {
             </div>
 
             {activeTab === 'traceability' && (
-                <Card className="border-white/10 bg-black/40 backdrop-blur-sm">
+                <Card className="border-border bg-card/40 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle className="text-white text-lg">Cadeia de Custódia (Chain of Custody)</CardTitle>
+                        <CardTitle className="text-foreground text-lg">Cadeia de Custódia (Chain of Custody)</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6 pb-12">
                         <div className="relative">
                             {/* Connecting Line */}
-                            <div className="absolute top-1/2 left-0 w-full h-1 bg-zinc-800 -translate-y-1/2 hidden md:block z-0"></div>
+                            <div className="absolute top-1/2 left-0 w-full h-1 bg-secondary -translate-y-1/2 hidden md:block z-0"></div>
 
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
                                 {/* Step 1: Cultivo */}
                                 <div className="flex flex-col items-center text-center space-y-3">
-                                    <div className="w-16 h-16 rounded-full bg-emerald-900/80 border-2 border-emerald-500 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                                        <Leaf className="h-8 w-8 text-emerald-400" />
+                                    <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.3)]">
+                                        <Leaf className="h-8 w-8 text-primary" />
                                     </div>
-                                    <div className="bg-black/60 p-3 rounded-lg border border-emerald-500/30 w-full">
-                                        <h4 className="font-bold text-emerald-400 text-sm">1. Cultivo</h4>
-                                        <p className="text-xs text-zinc-400 mt-1">{getAlgaeType()}</p>
-                                        <p className="text-[10px] text-zinc-500 mt-2 font-mono">{getLocation()}</p>
+                                    <div className="bg-card p-3 rounded-lg border border-primary/30 w-full">
+                                        <h4 className="font-bold text-primary text-sm">1. Cultivo</h4>
+                                        <p className="text-xs text-muted-foreground mt-1">{getAlgaeType()}</p>
+                                        <p className="text-[10px] text-muted-foreground mt-2 font-mono">{getLocation()}</p>
                                     </div>
                                 </div>
 
                                 {/* Step 2: Biomassa */}
                                 <div className="flex flex-col items-center text-center space-y-3">
-                                    <div className={cn("w-16 h-16 rounded-full flex items-center justify-center border-2 transition-all", measurements.length > 0 ? "bg-emerald-900/80 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" : "bg-zinc-900 border-zinc-700")}>
-                                        <Activity className={cn("h-8 w-8", measurements.length > 0 ? "text-emerald-400" : "text-zinc-600")} />
+                                    <div className={cn("w-16 h-16 rounded-full flex items-center justify-center border-2 transition-all", measurements.length > 0 ? "bg-primary/20 border-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]" : "bg-secondary border-border")}>
+                                        <Activity className={cn("h-8 w-8", measurements.length > 0 ? "text-primary" : "text-muted-foreground")} />
                                     </div>
-                                    <div className={cn("p-3 rounded-lg border w-full", measurements.length > 0 ? "bg-black/60 border-emerald-500/30" : "bg-black/30 border-zinc-800")}>
-                                        <h4 className={cn("font-bold text-sm", measurements.length > 0 ? "text-emerald-400" : "text-zinc-600")}>2. Biomassa</h4>
-                                        <p className="text-xs text-zinc-400 mt-1">
+                                    <div className={cn("p-3 rounded-lg border w-full", measurements.length > 0 ? "bg-card border-primary/30" : "bg-card/50 border-border")}>
+                                        <h4 className={cn("font-bold text-sm", measurements.length > 0 ? "text-primary" : "text-muted-foreground")}>2. Biomassa</h4>
+                                        <p className="text-xs text-muted-foreground mt-1">
                                             {measurements.length > 0 ? `${measurements[0].biomassAmount} kg acumulados` : "Aguardando dados"}
                                         </p>
-                                        {measurements.length > 0 && <p className="text-[10px] text-emerald-600 mt-1">Verificado on-chain</p>}
+                                        {measurements.length > 0 && <p className="text-[10px] text-primary mt-1">Verificado on-chain</p>}
                                     </div>
                                 </div>
 
                                 {/* Step 3: Bioproduto */}
                                 <div className="flex flex-col items-center text-center space-y-3">
-                                    <div className={cn("w-16 h-16 rounded-full flex items-center justify-center border-2 transition-all", measurements.length > 0 ? "bg-blue-900/80 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]" : "bg-zinc-900 border-zinc-700")}>
-                                        <Factory className={cn("h-8 w-8", measurements.length > 0 ? "text-blue-400" : "text-zinc-600")} />
+                                    <div className={cn("w-16 h-16 rounded-full flex items-center justify-center border-2 transition-all", measurements.length > 0 ? "bg-primary/10 border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.3)]" : "bg-secondary border-border")}>
+                                        <Factory className={cn("h-8 w-8", measurements.length > 0 ? "text-primary" : "text-muted-foreground")} />
                                     </div>
-                                    <div className={cn("p-3 rounded-lg border w-full", measurements.length > 0 ? "bg-black/60 border-blue-500/30" : "bg-black/30 border-zinc-800")}>
-                                        <h4 className={cn("font-bold text-sm", measurements.length > 0 ? "text-blue-400" : "text-zinc-600")}>3. Bioproduto</h4>
-                                        <p className="text-xs text-zinc-400 mt-1">{getBioproduct()}</p>
-                                        <p className="text-[10px] text-zinc-500 mt-2">Transformação Industrial</p>
+                                    <div className={cn("p-3 rounded-lg border w-full", measurements.length > 0 ? "bg-card border-primary/30" : "bg-card/50 border-border")}>
+                                        <h4 className={cn("font-bold text-sm", measurements.length > 0 ? "text-primary" : "text-muted-foreground")}>3. Bioproduto</h4>
+                                        <p className="text-xs text-muted-foreground mt-1">{getBioproduct()}</p>
+                                        <p className="text-[10px] text-muted-foreground mt-2">Transformação Industrial</p>
                                     </div>
                                 </div>
 
@@ -447,18 +472,18 @@ export default function ProjectDetailsPage() {
                             <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="colorBiomass" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                                <XAxis dataKey="date" stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                                 <Tooltip 
-                                    contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '8px' }}
-                                    itemStyle={{ color: '#fff' }}
+                                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
+                                    itemStyle={{ color: 'hsl(var(--foreground))' }}
                                 />
-                                <Area type="monotone" dataKey="biomass" stroke="#10b981" fillOpacity={1} fill="url(#colorBiomass)" name="Biomassa (kg)" />
+                                <Area type="monotone" dataKey="biomass" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorBiomass)" name="Biomassa (kg)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -543,7 +568,7 @@ export default function ProjectDetailsPage() {
                             Emitir Créditos
                           </Button>
                         )}
-                        {isVerifier && m.status === 3 && (
+                        {m.status === 3 && (wallet.address === owner || isVerifier) && (
                           <Button 
                             size="sm" 
                             disabled={actionLoading}

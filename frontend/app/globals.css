@@ -50,34 +50,34 @@
 
 @layer base {
   :root {
-    /* Netflix-inspired Dark Palette adapted for Alga */
-    --background: 204 61% 13%; /* #0D2C35 - Credita Deep Blue */
-    --foreground: 0 0% 98%;     /* #fafafa */
+    /* Navy Blue Theme (Requested) */
+    --background: 215 50% 10%;   /* #0d1626 - Deep Navy Background */
+    --foreground: 210 40% 98%;   /* #f8fafc - Off-white text */
 
-    --card: 204 61% 13%;
-    --card-foreground: 0 0% 98%;
+    --card: 215 40% 13%;         /* #131e30 - Lighter Navy for cards */
+    --card-foreground: 210 40% 98%;
 
-    --popover: 204 61% 13%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 215 40% 13%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 142 97% 30%; /* #029738 - Credita Green */
-    --primary-foreground: 0 0% 100%;
+    --primary: 142 70% 45%;      /* #22c55e - Vibrant Green for actions */
+    --primary-foreground: 144 100% 10%; /* Dark green text on primary button */
 
-    --secondary: 204 30% 20%; /* Darker Blue/Gray aligned with background */
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 215 30% 18%;    /* #202b3d - Muted Navy for secondary elements */
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 204 30% 20%; /* Aligned with secondary */
-    --muted-foreground: 204 20% 70%;
+    --muted: 215 30% 18%;
+    --muted-foreground: 215 20% 65%; /* Muted text */
 
-    --accent: 204 30% 25%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 215 30% 22%;       /* #273449 - Hover states */
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 204 30% 25%; /* Visible border on dark blue */
-    --input: 204 30% 20%;
-    --ring: 142 97% 30%;
+    --border: 215 30% 20%;       /* Subtle border */
+    --input: 215 30% 15%;        /* Darker input background */
+    --ring: 142 70% 45%;
 
     --radius: 0.5rem;
   }
@@ -89,7 +89,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-color: #0D2C35; /* Credita Carbon Deep Blue */
   }
 }
 

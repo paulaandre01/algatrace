@@ -108,29 +108,29 @@ export const RecentActivity = () => {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'measurement': return <Plus className="h-4 w-4 text-blue-500" />;
-      case 'verification': return <CheckCircle className="h-4 w-4 text-emerald-500" />;
-      case 'issuance': return <Leaf className="h-4 w-4 text-green-600" />;
-      case 'retirement': return <Flame className="h-4 w-4 text-orange-500" />;
-      default: return <Activity className="h-4 w-4 text-slate-500" />;
+      case 'measurement': return <Plus className="h-4 w-4 text-primary" />;
+      case 'verification': return <CheckCircle className="h-4 w-4 text-primary" />;
+      case 'issuance': return <Leaf className="h-4 w-4 text-primary" />;
+      case 'retirement': return <Flame className="h-4 w-4 text-destructive" />;
+      default: return <Activity className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getBgColor = (type: string) => {
     switch (type) {
-      case 'measurement': return 'bg-blue-50 border-blue-100';
-      case 'verification': return 'bg-emerald-50 border-emerald-100';
-      case 'issuance': return 'bg-green-50 border-green-100';
-      case 'retirement': return 'bg-orange-50 border-orange-100';
-      default: return 'bg-slate-50 border-slate-100';
+      case 'measurement': return 'bg-primary/10 border-primary/20';
+      case 'verification': return 'bg-primary/10 border-primary/20';
+      case 'issuance': return 'bg-primary/10 border-primary/20';
+      case 'retirement': return 'bg-destructive/10 border-destructive/20';
+      default: return 'bg-secondary border-border';
     }
   };
 
   return (
-    <Card className="border border-slate-100 shadow-xl shadow-slate-200/50 h-full">
+    <Card className="border border-border bg-card shadow-xl shadow-primary/5 h-full">
       <CardHeader>
-        <CardTitle className="flex items-center text-lg">
-          <Clock className="mr-2 h-5 w-5 text-slate-400" />
+        <CardTitle className="flex items-center text-lg text-foreground">
+          <Clock className="mr-2 h-5 w-5 text-muted-foreground" />
           Atividade Recente
         </CardTitle>
       </CardHeader>
@@ -139,36 +139,36 @@ export const RecentActivity = () => {
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-start space-x-4 animate-pulse">
-                <div className="h-10 w-10 rounded-full bg-slate-100"></div>
+                <div className="h-10 w-10 rounded-full bg-secondary"></div>
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-3/4 bg-slate-100 rounded"></div>
-                  <div className="h-3 w-1/2 bg-slate-100 rounded"></div>
+                  <div className="h-4 w-3/4 bg-secondary rounded"></div>
+                  <div className="h-3 w-1/2 bg-secondary rounded"></div>
                 </div>
               </div>
             ))}
           </div>
         ) : activities.length > 0 ? (
-          <div className="relative border-l border-slate-200 ml-5 space-y-8 my-2">
+          <div className="relative border-l border-border ml-5 space-y-8 my-2">
             {activities.map((item, index) => (
               <div key={`${item.hash}-${index}`} className="relative pl-8 group">
-                <span className={`absolute -left-[17px] top-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white ring-1 ring-slate-100 ${getBgColor(item.type)} transition-all group-hover:scale-110`}>
+                <span className={`absolute -left-[17px] top-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-background ring-1 ring-border ${getBgColor(item.type)} transition-all group-hover:scale-110`}>
                   {getIcon(item.type)}
                 </span>
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors">
+                  <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                     {item.title}
                   </span>
-                  <span className="text-xs text-slate-500 mb-1">
+                  <span className="text-xs text-muted-foreground mb-1">
                     {item.timestamp.toLocaleDateString()} às {item.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </span>
-                  <p className="text-sm text-slate-600 bg-slate-50/50 p-3 rounded-lg border border-slate-100 mt-1 group-hover:bg-slate-50 transition-colors">
+                  <p className="text-sm text-muted-foreground bg-secondary/50 p-3 rounded-lg border border-border mt-1 group-hover:bg-secondary transition-colors">
                     {item.description}
                   </p>
                   <a 
                     href={`https://etherscan.io/tx/${item.hash}`} 
                     target="_blank" 
                     rel="noreferrer"
-                    className="flex items-center text-[10px] text-slate-400 hover:text-emerald-500 mt-2 w-fit transition-colors"
+                    className="flex items-center text-[10px] text-muted-foreground/70 hover:text-primary mt-2 w-fit transition-colors"
                   >
                     Ver na Blockchain <ExternalLink className="ml-1 h-3 w-3" />
                   </a>
@@ -178,11 +178,11 @@ export const RecentActivity = () => {
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="bg-slate-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Activity className="h-8 w-8 text-slate-300" />
+            <div className="bg-secondary h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Activity className="h-8 w-8 text-muted-foreground" />
             </div>
-            <p className="text-slate-500 font-medium">Nenhuma atividade registrada</p>
-            <p className="text-xs text-slate-400 mt-1">As transações aparecerão aqui.</p>
+            <p className="text-muted-foreground font-medium">Nenhuma atividade registrada</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">As transações aparecerão aqui.</p>
           </div>
         )}
       </CardContent>
