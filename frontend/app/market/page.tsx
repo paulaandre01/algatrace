@@ -36,6 +36,44 @@ const MOCK_INVESTMENT_TOKENS = [
 
 export default function MarketPage() {
   const [activeTab, setActiveTab] = useState<'investment' | 'credits'>('investment');
+  const [x402Loading, setX402Loading] = useState(false);
+  const [x402Quote, setX402Quote] = useState<any>(null);
+  const [x402Tx, setX402Tx] = useState('');
+  const [x402Report, setX402Report] = useState<any>(null);
+  const [x402Error, setX402Error] = useState<string | null>(null);
+
+  const requestX402 = async () => {
+    setX402Loading(true);
+    setX402Error(null);
+    setX402Report(null);
+    try {
+      const res = await fetch('/api/x402/report');
+      const json = await res.json();
+      if (res.status !== 402) throw new Error(json?.error || 'Falha ao gerar desafio x402');
+      setX402Quote(json.quote);
+    } catch (e: any) {
+      setX402Error(e?.message || 'Erro no x402');
+    } finally {
+      setX402Loading(false);
+    }
+  };
+
+  const unlockX402 = async () => {
+    if (!x402Quote?.memo || !x402Tx) return;
+    setX402Loading(true);
+    setX402Error(null);
+    try {
+      const nonce = String(x402Quote.memo).replace('X402:', '');
+      const res = await fetch(`/api/x402/report?nonce=${encodeURIComponent(nonce)}&tx=${encodeURIComponent(x402Tx)}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || json?.message || 'Pagamento não verificado');
+      setX402Report(json.report);
+    } catch (e: any) {
+      setX402Error(e?.message || 'Erro ao validar pagamento');
+    } finally {
+      setX402Loading(false);
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 pt-8 max-w-7xl mx-auto px-6">
@@ -181,14 +219,71 @@ export default function MarketPage() {
                 </div>
             </div>
         ) : (
-            <div className="flex flex-col items-center justify-center h-[400px] bg-secondary/20 rounded-xl border border-border border-dashed">
-                <div className="bg-primary/10 p-6 rounded-full mb-4">
-                    <Leaf className="h-12 w-12 text-primary" />
-                </div>
-                <h3 className="text-foreground font-bold text-xl mb-2">Mercado Secundário de Créditos</h3>
-                <p className="text-muted-foreground max-w-md text-center">
-                    A negociação de créditos de carbono (Token ALGACO2e) estará disponível na próxima fase do Beta.
-                </p>
+            <div className="space-y-6">
+                <Card className="bg-card border-border shadow-lg">
+                    <CardHeader>
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                            <Leaf className="h-5 w-5 text-primary" />
+                            x402 (Payment Required) — Demo
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                            Exemplo de paywall usando HTTP 402 + pagamento em XLM (Testnet) para destravar um relatório Beta.
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <Button onClick={requestX402} disabled={x402Loading} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                                Gerar cobrança (402)
+                            </Button>
+                            {x402Quote?.payment_uri && (
+                                <a
+                                    href={x402Quote.payment_uri}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-sm text-primary underline underline-offset-4 self-center"
+                                >
+                                    Abrir pagamento (SEP-7)
+                                </a>
+                            )}
+                        </div>
+
+                        {x402Quote && (
+                            <div className="text-xs text-muted-foreground bg-secondary/30 border border-border rounded-lg p-4 space-y-1">
+                                <div>Destination: {x402Quote.destination}</div>
+                                <div>Amount (XLM): {x402Quote.amount}</div>
+                                <div>Memo: {x402Quote.memo}</div>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground">Tx hash do pagamento (depois de pagar)</label>
+                            <input
+                                value={x402Tx}
+                                onChange={(e) => setX402Tx(e.target.value)}
+                                className="w-full h-12 pl-4 pr-4 rounded-xl border border-input bg-input focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm text-foreground"
+                                placeholder="Cole aqui o hash da transação confirmada"
+                            />
+                            <Button onClick={unlockX402} disabled={x402Loading || !x402Tx || !x402Quote} className="bg-secondary hover:bg-secondary/80 text-foreground">
+                                Validar pagamento e destravar
+                            </Button>
+                        </div>
+
+                        {x402Error && (
+                            <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                                {x402Error}
+                            </div>
+                        )}
+
+                        {x402Report && (
+                            <div className="text-sm text-foreground bg-primary/5 border border-primary/10 rounded-lg p-4 space-y-1">
+                                <div className="font-semibold">{x402Report.title}</div>
+                                <div className="text-muted-foreground">{x402Report.note}</div>
+                                <div className="text-muted-foreground">Unlocked by: {x402Report.unlocked_by}</div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         )}
       </div>
