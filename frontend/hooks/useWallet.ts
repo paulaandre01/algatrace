@@ -1,136 +1,87 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ethers } from 'ethers';
+import {
+  getAddress,
+  getNetwork,
+  isConnected as freighterIsConnected,
+  requestAccess,
+  signTransaction as freighterSignTransaction,
+} from '@stellar/freighter-api';
+import { STELLAR_CONFIG } from '@/lib/stellar';
 
 export type WalletState = {
-  provider: ethers.BrowserProvider | null;
-  signer: ethers.JsonRpcSigner | null;
-  address: string | null;
+  publicKey: string | null;
   isConnected: boolean;
-  chainId: number | null;
+  networkPassphrase: string | null;
+  network: string | null;
 };
 
 export const useWallet = () => {
   const [wallet, setWallet] = useState<WalletState>({
-    provider: null,
-    signer: null,
-    address: null,
+    publicKey: null,
     isConnected: false,
-    chainId: null,
+    networkPassphrase: null,
+    network: null,
   });
 
   const connect = useCallback(async () => {
-    if (typeof window !== 'undefined' && (window as any).ethereum) {
-      try {
-        const provider = new ethers.BrowserProvider((window as any).ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        const signer = await provider.getSigner();
-        const network = await provider.getNetwork();
-        
-        setWallet({
-          provider,
-          signer,
-          address: accounts[0],
-          isConnected: true,
-          chainId: Number(network.chainId),
-        });
-      } catch (error) {
-        console.error("Failed to connect wallet:", error);
+    try {
+      const status = await freighterIsConnected();
+      if (!status.isConnected) {
+        alert('Instale/ative a Freighter para continuar.');
+        return;
       }
-    } else {
-      alert("Please install MetaMask or another Web3 wallet.");
+
+      const allowed = await requestAccess();
+      if (!allowed) return;
+
+      const { address, error } = await getAddress();
+      if (error || !address) throw error || new Error('Endereço não disponível');
+
+      const net = await getNetwork().catch(() => null);
+
+      setWallet({
+        publicKey: address,
+        isConnected: true,
+        networkPassphrase: net?.networkPassphrase || STELLAR_CONFIG.networkPassphrase,
+        network: net?.network || null,
+      });
+    } catch (error) {
+      console.error('Failed to connect Freighter:', error);
+      alert('Falha ao conectar com a Freighter.');
     }
   }, []);
 
   const disconnect = useCallback(() => {
     setWallet({
-      provider: null,
-      signer: null,
-      address: null,
+      publicKey: null,
       isConnected: false,
-      chainId: null,
+      networkPassphrase: null,
+      network: null,
     });
   }, []);
 
-  const switchNetwork = useCallback(async () => {
-    if (typeof window !== 'undefined' && (window as any).ethereum) {
-      const targetChainId = Number(process.env.NEXT_PUBLIC_TARGET_CHAIN_ID || 31337);
-      const chainIdHex = '0x' + targetChainId.toString(16);
-      
-      try {
-        await (window as any).ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: chainIdHex }],
-        });
-      } catch (switchError: any) {
-        // This error code indicates that the chain has not been added to MetaMask.
-        if (switchError.code === 4902) {
-            if (targetChainId === 31337) {
-                 try {
-                    await (window as any).ethereum.request({
-                      method: 'wallet_addEthereumChain',
-                      params: [
-                        {
-                          chainId: '0x7A69',
-                          chainName: 'Hardhat Localhost',
-                          nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
-                          rpcUrls: ['http://127.0.0.1:8545'],
-                        },
-                      ],
-                    });
-                  } catch (addError) {
-                    console.error('Failed to add network:', addError);
-                  }
-            } else if (targetChainId === 11155111) {
-                 try {
-                    await (window as any).ethereum.request({
-                      method: 'wallet_addEthereumChain',
-                      params: [
-                        {
-                          chainId: '0xaa36a7',
-                          chainName: 'Sepolia Testnet',
-                          nativeCurrency: { name: 'Sepolia ETH', symbol: 'SEP', decimals: 18 },
-                          rpcUrls: ['https://sepolia.infura.io/v3/'], // Public RPC, better to use one from env but this is client side fallback
-                          blockExplorerUrls: ['https://sepolia.etherscan.io'],
-                        },
-                      ],
-                    });
-                  } catch (addError) {
-                    console.error('Failed to add network:', addError);
-                  }
-            }
-        } else {
-          console.error('Failed to switch network:', switchError);
-        }
-      }
-    }
-  }, []);
+  const signTransactionXdr = useCallback(
+    async (xdr: string) => {
+      if (!wallet.publicKey) throw new Error('Carteira não conectada');
+      const { signedTxXdr, error } = await freighterSignTransaction(xdr, {
+        address: wallet.publicKey,
+        networkPassphrase: wallet.networkPassphrase || STELLAR_CONFIG.networkPassphrase,
+      });
+      if (error || !signedTxXdr) throw error || new Error('Assinatura falhou');
+      return signedTxXdr;
+    },
+    [wallet.publicKey, wallet.networkPassphrase]
+  );
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).ethereum) {
-      // Listen for account changes
-      (window as any).ethereum.on('accountsChanged', (accounts: string[]) => {
-        if (accounts.length > 0) {
-          connect();
-        } else {
-          disconnect();
-        }
-      });
-      
-      // Listen for chain changes
-      (window as any).ethereum.on('chainChanged', () => {
-        window.location.reload();
-      });
-
-      // Check if already connected
-      (window as any).ethereum.request({ method: 'eth_accounts' }).then((accounts: string[]) => {
-        if (accounts.length > 0) {
-          connect();
-        }
-      });
-    }
+    freighterIsConnected()
+      .then((status) => {
+        if (status.isConnected) connect();
+      })
+      .catch(() => {});
   }, [connect, disconnect]);
 
-  return { ...wallet, wallet, connect, disconnect, switchNetwork };
+  return { ...wallet, wallet, connect, disconnect, signTransactionXdr };
 };
