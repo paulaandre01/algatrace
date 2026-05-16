@@ -176,7 +176,7 @@ export default function DocsPage() {
                     </li>
                     <li className="flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 p-2 rounded-lg border border-border">
                         <CheckCircle2 className="h-4 w-4 text-primary" />
-                        <span><strong>Intransferível:</strong> Tokens deste Beta são Soulbound (não negociáveis).</span>
+                        <span><strong>Beta:</strong> Tokens não são negociáveis no app (uso experimental).</span>
                     </li>
                     <li className="flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 p-2 rounded-lg border border-border">
                         <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -198,15 +198,27 @@ export default function DocsPage() {
                 <ul className="space-y-3">
                     <li className="flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 p-2 rounded-lg border border-border">
                         <div className="h-2 w-2 rounded-full bg-muted-foreground/50"></div>
-                        <span className="font-semibold">Blockchain:</span> Ethereum (Hardhat)
+                        <span className="font-semibold">Blockchain:</span> Stellar Testnet
                     </li>
                     <li className="flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 p-2 rounded-lg border border-border">
                         <div className="h-2 w-2 rounded-full bg-muted-foreground/50"></div>
-                        <span className="font-semibold">NFT (ERC-721):</span> Identidade do Projeto
+                        <span className="font-semibold">Identidade do Projeto:</span> Manage Data + ID local (Beta)
                     </li>
                     <li className="flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 p-2 rounded-lg border border-border">
                         <div className="h-2 w-2 rounded-full bg-muted-foreground/50"></div>
-                        <span className="font-semibold">Token (ERC-20):</span> Crédito de Carbono
+                        <span className="font-semibold">Token de Crédito:</span> Custom Asset ALGCO2
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 p-2 rounded-lg border border-border">
+                        <div className="h-2 w-2 rounded-full bg-muted-foreground/50"></div>
+                        <span className="font-semibold">Registro de Eventos:</span> Horizon API (REST)
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 p-2 rounded-lg border border-border">
+                        <div className="h-2 w-2 rounded-full bg-muted-foreground/50"></div>
+                        <span className="font-semibold">Verificação / Auditoria:</span> Stellar Expert
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 p-2 rounded-lg border border-border">
+                        <div className="h-2 w-2 rounded-full bg-muted-foreground/50"></div>
+                        <span className="font-semibold">Wallet:</span> Freighter (non-custodial)
                     </li>
                 </ul>
             </CardContent>

@@ -3,50 +3,82 @@
 import React, { useEffect, useState } from 'react';
 import { Leaf, Flame, History, ArrowRight, Activity, Wind, TrendingUp } from 'lucide-react';
 import { useWallet } from '@/hooks/useWallet';
-import { getCarbonCreditToken } from '@/lib/contracts';
+import {
+  accountExists,
+  buildChangeTrustXdr,
+  buildRetireCreditsXdr,
+  friendbotFund,
+  getAlgCO2Trustline,
+  submitSignedTransactionXdr,
+} from '@/lib/stellar';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { ethers } from 'ethers';
 
 export default function CreditsPage() {
-  const { wallet } = useWallet();
+  const { wallet, signTransactionXdr } = useWallet();
   const [balance, setBalance] = useState<string>('0');
   const [loading, setLoading] = useState(false);
   const [burnAmount, setBurnAmount] = useState('');
   const [burning, setBurning] = useState(false);
+  const [hasTrustline, setHasTrustline] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!wallet.isConnected || !wallet.signer || !wallet.address) return;
+      if (!wallet.isConnected || !wallet.publicKey) return;
 
       try {
-        const contract = getCarbonCreditToken(wallet.signer);
-        const bal = await contract.balanceOf(wallet.address);
-        setBalance(ethers.formatUnits(bal, 18));
+        const info = await getAlgCO2Trustline(wallet.publicKey);
+        setHasTrustline(info.hasTrustline);
+        setBalance(info.balance);
       } catch (error) {
         console.error("Error fetching balance:", error);
       }
     };
 
     fetchBalance();
-    // Set up a listener for Transfer events to update balance in real-time could be added here
-  }, [wallet.isConnected, wallet.signer, wallet.address]);
+  }, [wallet.isConnected, wallet.publicKey]);
+
+  const handleCreateTrustline = async () => {
+    if (!wallet.publicKey) return;
+    setLoading(true);
+    try {
+      const exists = await accountExists(wallet.publicKey);
+      if (!exists) await friendbotFund(wallet.publicKey);
+
+      const xdr = await buildChangeTrustXdr({ publicKey: wallet.publicKey });
+      const signed = await signTransactionXdr(xdr);
+      await submitSignedTransactionXdr(signed);
+
+      const info = await getAlgCO2Trustline(wallet.publicKey);
+      setHasTrustline(info.hasTrustline);
+      setBalance(info.balance);
+    } catch (e: any) {
+      alert(e?.message || 'Erro ao criar trustline.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBurn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!wallet.signer || !burnAmount) return;
+    if (!wallet.publicKey || !burnAmount) return;
 
     setBurning(true);
     try {
-      const contract = getCarbonCreditToken(wallet.signer);
-      const amount = ethers.parseUnits(burnAmount, 18);
-      const tx = await contract.burn(amount);
-      console.log("Burn tx:", tx.hash);
-      await tx.wait();
-      
-      // Update balance
-      const bal = await contract.balanceOf(wallet.address);
-      setBalance(ethers.formatUnits(bal, 18));
+      const exists = await accountExists(wallet.publicKey);
+      if (!exists) await friendbotFund(wallet.publicKey);
+
+      const xdr = await buildRetireCreditsXdr({
+        publicKey: wallet.publicKey,
+        amount: burnAmount,
+        reason: 'ESG Beta',
+      });
+      const signed = await signTransactionXdr(xdr);
+      await submitSignedTransactionXdr(signed);
+
+      const info = await getAlgCO2Trustline(wallet.publicKey);
+      setHasTrustline(info.hasTrustline);
+      setBalance(info.balance);
       setBurnAmount('');
       alert("Créditos aposentados com sucesso!");
     } catch (error) {
@@ -66,7 +98,7 @@ export default function CreditsPage() {
         <div className="max-w-md space-y-4">
           <h2 className="text-2xl font-bold text-foreground">Conecte sua carteira</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Para visualizar e gerenciar seus créditos de carbono (Token ALGACO2), é necessário conectar sua carteira MetaMask.
+            Para visualizar e gerenciar seus créditos de carbono (Custom Asset ALGCO2), conecte sua carteira Freighter.
           </p>
         </div>
       </div>
@@ -104,8 +136,22 @@ export default function CreditsPage() {
             <div className="mt-8">
               <div className="flex items-baseline space-x-3">
                 <h2 className="text-6xl font-bold tracking-tighter text-foreground">{parseFloat(balance).toFixed(2)}</h2>
-                <span className="text-xl text-primary font-medium bg-primary/10 px-3 py-1 rounded-full backdrop-blur-sm border border-primary/20">ALGACO2e</span>
+                <span className="text-xl text-primary font-medium bg-primary/10 px-3 py-1 rounded-full backdrop-blur-sm border border-primary/20">ALGCO2</span>
               </div>
+              {!hasTrustline && (
+                <div className="mt-6">
+                  <Button
+                    onClick={handleCreateTrustline}
+                    disabled={loading}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
+                  >
+                    Ativar ALGCO2 (Trustline)
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Necessário para receber e enviar o Custom Asset na Stellar Testnet.
+                  </p>
+                </div>
+              )}
               <p className="text-muted-foreground text-sm mt-4 flex items-center">
                 <TrendingUp className="mr-2 h-4 w-4" />
                 Valor estimado: -- (Mercado Beta)
@@ -129,7 +175,7 @@ export default function CreditsPage() {
                   <Activity className="h-4 w-4 mr-2" />
                   Ação Irreversível
                 </p>
-                Ao "queimar" tokens, você os retira de circulação permanentemente para compensar emissões de carbono. Esta ação é registrada na blockchain.
+                Ao aposentar, você envia ALGCO2 para o endereço de retirement com um memo. Esta ação é registrada na blockchain.
               </div>
               
               <div className="space-y-2">
@@ -145,7 +191,7 @@ export default function CreditsPage() {
                     className="w-full h-12 pl-4 pr-20 rounded-xl border border-input bg-input focus:bg-background focus:border-destructive focus:ring-2 focus:ring-destructive/20 transition-all outline-none text-lg font-medium text-foreground placeholder:text-muted-foreground"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">
-                    ALGACO2
+                    ALGCO2
                   </div>
                 </div>
               </div>

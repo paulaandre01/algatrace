@@ -4,100 +4,23 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, Leaf, Loader2, MapPin, ArrowRight } from 'lucide-react';
 import { useWallet } from '@/hooks/useWallet';
-import { getAlgaeProjectNFT, CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { listLocalProjects, type LocalProjectMetadata } from '@/lib/stellar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
-interface ProjectAttribute {
-  trait_type: string;
-  value: string;
-}
-
-interface ProjectMetadata {
-  name: string;
-  description: string;
-  attributes: ProjectAttribute[];
-  image: string;
-}
-
-interface Project {
-  id: number;
-  uri: string;
-  metadata?: ProjectMetadata;
-}
-
 export default function ProjectsPage() {
   const { wallet } = useWallet();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<LocalProjectMetadata[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProjects = async () => {
-    if (!wallet.isConnected || !wallet.signer || !wallet.address) return;
-
-    if (!CONTRACT_ADDRESSES.AlgaeProjectNFT) {
-      setError("Erro de configuração: Endereço do contrato NFT não definido.");
-      return;
-    }
+    if (!wallet.isConnected) return;
 
     setLoading(true);
     setError(null);
     try {
-      const contract = getAlgaeProjectNFT(wallet.signer);
-      
-      // Verificação básica de rede (opcional, mas útil para debug)
-      // const network = await wallet.provider?.getNetwork();
-      // console.log("Network:", network?.chainId);
-
-      const balance = await contract.balanceOf(wallet.address);
-      console.log(`Fetching projects... Balance: ${balance.toString()}`);
-      
-      const fetchedProjects: Project[] = [];
-      const bal = Number(balance); // Safe cast for UI purposes
-
-      if (bal === 0) {
-        setProjects([]);
-        return;
-      }
-
-      for (let i = 0; i < bal; i++) {
-        try {
-          const tokenId = await contract.tokenOfOwnerByIndex(wallet.address, i);
-          const uri = await contract.tokenURI(tokenId);
-          
-          let metadata: ProjectMetadata | undefined;
-          if (uri.startsWith('data:application/json;base64,')) {
-            try {
-              const base64 = uri.split(',')[1];
-              // Fix para Unicode strings
-              const json = decodeURIComponent(escape(atob(base64)));
-              metadata = JSON.parse(json);
-            } catch (e) {
-              console.error("Error parsing metadata for token", tokenId, e);
-              // Fallback simples se falhar o decode complexo
-              try {
-                  const base64 = uri.split(',')[1];
-                  const json = atob(base64);
-                  metadata = JSON.parse(json);
-              } catch (e2) {
-                  console.error("Fallback parse failed", e2);
-              }
-            }
-          } else {
-              // Handle non-base64 URIs (e.g., ipfs:// or http://)
-              console.warn(`Token ${tokenId} has non-base64 URI: ${uri}`);
-          }
-
-          fetchedProjects.push({
-            id: Number(tokenId),
-            uri,
-            metadata,
-          });
-        } catch (innerError) {
-           console.error(`Error fetching token at index ${i}:`, innerError);
-        }
-      }
-      setProjects(fetchedProjects);
+      setProjects(listLocalProjects());
     } catch (error: any) {
       console.error("Error fetching projects:", error);
       setError(`Erro ao buscar projetos: ${error.message || error}`);
@@ -108,7 +31,7 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     fetchProjects();
-  }, [wallet.isConnected, wallet.signer, wallet.address]);
+  }, [wallet.isConnected]);
 
   if (!wallet.isConnected) {
     return (
@@ -119,7 +42,7 @@ export default function ProjectsPage() {
         <div className="max-w-md space-y-2">
           <h2 className="text-2xl font-bold text-foreground">Conecte sua carteira</h2>
           <p className="text-muted-foreground">
-            Para visualizar e gerenciar seus projetos de captura de carbono, é necessário conectar sua carteira MetaMask.
+            Para visualizar e gerenciar seus projetos de captura de carbono, conecte sua carteira Freighter (Stellar).
           </p>
         </div>
       </div>
@@ -184,9 +107,6 @@ export default function ProjectsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => {
-            const location = project.metadata?.attributes.find(a => a.trait_type === "Location")?.value;
-            const algaeType = project.metadata?.attributes.find(a => a.trait_type === "Algae Type" || a.trait_type === "Algae Species")?.value;
-
             return (
               <Card key={project.id} className="group hover:scale-105 transition-all duration-300 border-border bg-card overflow-hidden">
                 <div className="p-6">
@@ -195,27 +115,27 @@ export default function ProjectsPage() {
                       <Leaf className="h-6 w-6 text-primary" />
                     </div>
                     <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground border border-border">
-                      ID: #{project.id}
+                      ID: {project.id.slice(0, 8)}
                     </span>
                   </div>
                   
                   <div className="space-y-3">
                     <h3 className="text-xl font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-                      {project.metadata?.name || `Projeto Alga #${project.id}`}
+                      {project.name || `Projeto Alga ${project.id.slice(0, 8)}`}
                     </h3>
                     
                     <div className="space-y-2">
-                      {location && (
+                      {project.location && (
                         <div className="flex items-center text-sm text-muted-foreground">
                           <MapPin className="mr-2 h-4 w-4 text-muted-foreground/70" />
-                          <span className="truncate">{location}</span>
+                          <span className="truncate">{project.location}</span>
                         </div>
                       )}
 
-                      {algaeType && (
+                      {project.algaeType && (
                         <div className="flex items-center text-sm text-muted-foreground">
                           <Leaf className="mr-2 h-4 w-4 text-muted-foreground/70" />
-                          <span className="truncate">{algaeType}</span>
+                          <span className="truncate">{project.algaeType}</span>
                         </div>
                       )}
                     </div>

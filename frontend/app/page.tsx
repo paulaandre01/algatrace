@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Activity, Leaf, Wind, Play, Info, Plus, ChevronRight } from "lucide-react";
 import { useWallet } from '@/hooks/useWallet';
-import { getAlgaeProjectNFT, getCarbonCreditToken, getMRVRegistry } from '@/lib/contracts';
-import { ethers } from 'ethers';
+import { getAlgCO2Balance, listLocalProjects } from '@/lib/stellar';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
@@ -18,25 +17,21 @@ export default function Home() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!wallet.isConnected || !wallet.signer || !wallet.address) return;
+      if (!wallet.isConnected || !wallet.publicKey) return;
 
       setLoading(true);
       try {
-        const nftContract = getAlgaeProjectNFT(wallet.signer);
-        const tokenContract = getCarbonCreditToken(wallet.signer);
+        const projects = listLocalProjects();
+        setProjectCount(projects.length);
 
-        const balNFT = await nftContract.balanceOf(wallet.address);
-        setProjectCount(Number(balNFT));
-
-        const balToken = await tokenContract.balanceOf(wallet.address);
-        setCreditBalance(ethers.formatUnits(balToken, 18));
+        const bal = await getAlgCO2Balance(wallet.publicKey);
+        setCreditBalance(bal);
         
-        // Mock Hero Data if no project, or fetch first project
-        if (Number(balNFT) > 0) {
+        if (projects.length > 0) {
             setHeroProject({
-                name: "Projeto Piloto Alpha",
-                description: "Monitoramento de captura de carbono em fotobiorreatores de alta eficiência.",
-                id: 1
+                name: projects[0].name,
+                description: projects[0].description,
+                id: projects[0].id
             });
         } else {
              setHeroProject(null);
@@ -50,7 +45,7 @@ export default function Home() {
     };
 
     fetchData();
-  }, [wallet.isConnected, wallet.signer, wallet.address]);
+  }, [wallet.isConnected, wallet.publicKey]);
 
   return (
     <div className="pb-20 bg-background min-h-screen">

@@ -6,8 +6,7 @@ import { Bell, Search, Menu, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export function Header() {
-  const { isConnected, address, connect, chainId, switchNetwork } = useWallet();
-  const targetChainId = Number(process.env.NEXT_PUBLIC_TARGET_CHAIN_ID || 31337);
+  const { isConnected, publicKey, connect } = useWallet();
 
   return (
     <header className="sticky top-0 z-40 w-full h-20 bg-gradient-to-b from-background/90 to-transparent transition-all duration-300">
@@ -36,14 +35,6 @@ export function Header() {
           </button>
 
           <div className="flex items-center gap-2">
-            {isConnected && chainId !== targetChainId && (
-              <Button
-                onClick={switchNetwork}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-sm px-4 py-1.5 text-xs transition-colors"
-              >
-                Trocar Rede
-              </Button>
-            )}
             {!isConnected ? (
               <Button 
                 onClick={connect}
@@ -55,10 +46,10 @@ export function Header() {
               <div className="flex items-center gap-2 group cursor-pointer">
                 <div className="text-right hidden sm:block">
                     <p className="text-xs font-bold text-primary">CONECTADO</p>
-                    <p className="text-sm font-medium text-foreground max-w-[100px] truncate">{address}</p>
+                    <p className="text-sm font-medium text-foreground max-w-[140px] truncate">{publicKey}</p>
                 </div>
                 <div className="h-8 w-8 bg-primary rounded flex items-center justify-center text-primary-foreground font-bold text-xs">
-                    {address?.slice(2,4).toUpperCase()}
+                    {(publicKey || '').slice(0, 2).toUpperCase()}
                 </div>
                 <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:rotate-180 transition-transform duration-200" />
               </div>

@@ -5,7 +5,14 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Activity, Save, Leaf } from 'lucide-react';
 import Link from 'next/link';
 import { useWallet } from '@/hooks/useWallet';
-import { getMRVRegistry } from '@/lib/contracts';
+import {
+  accountExists,
+  addLocalMeasurement,
+  buildAddMeasurementXdr,
+  friendbotFund,
+  sha256Hex,
+  submitSignedTransactionXdr,
+} from '@/lib/stellar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { calculateCO2, MRV_CONSTANTS } from '@/lib/mrv';
@@ -14,7 +21,7 @@ export default function NewMeasurementPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
-  const { wallet } = useWallet();
+  const { wallet, signTransactionXdr } = useWallet();
   
   const [loading, setLoading] = useState(false);
   const [biomass, setBiomass] = useState<string>('');
@@ -32,34 +39,53 @@ export default function NewMeasurementPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!wallet.isConnected || !wallet.signer || !id) {
+    if (!wallet.isConnected || !wallet.publicKey || !id) {
       alert("Carteira não conectada.");
       return;
     }
 
     setLoading(true);
     try {
-      const biomassAmount = Math.floor(parseFloat(biomass)); // Using integers for simplicity in Beta
-      const co2Amount = Math.floor(co2Captured);
+      const biomassAmount = Math.floor(parseFloat(biomass));
+      const co2Amount = Number(co2Captured.toFixed(2));
       
-      // Create a mock data hash (in production this would be IPFS hash of sensor logs)
+      const now = Date.now();
       const dataPayload = {
         projectId: id,
-        timestamp: Date.now(),
-        biomass: biomassAmount,
-        factor: MRV_CONSTANTS.CO2_CONVERSION_FACTOR
+        timestamp: now,
+        biomassKg: biomassAmount,
+        co2Kg: co2Amount,
+        factor: MRV_CONSTANTS.CO2_CONVERSION_FACTOR,
       };
-      const dataHash = "0x" + Buffer.from(JSON.stringify(dataPayload)).toString('hex').slice(0, 60); // Mock hash
 
-      const contract = getMRVRegistry(wallet.signer);
-      
-      // addMeasurement(projectId, biomass, co2, dataHash)
-      const tx = await contract.addMeasurement(id, biomassAmount, co2Amount, dataHash);
-      
-      console.log("Transaction sent:", tx.hash);
-      await tx.wait();
-      
-      console.log("Measurement added");
+      const raw = JSON.stringify(dataPayload);
+      const dataHash = await sha256Hex(raw);
+      const measurementId = await sha256Hex(`${id}|${now}|${dataHash}`);
+
+      const exists = await accountExists(wallet.publicKey);
+      if (!exists) await friendbotFund(wallet.publicKey);
+
+      const xdr = await buildAddMeasurementXdr({
+        publicKey: wallet.publicKey,
+        projectId: id,
+        measurementId,
+        biomassKg: biomassAmount,
+        co2Kg: co2Amount,
+        dataHash,
+      });
+      const signed = await signTransactionXdr(xdr);
+      await submitSignedTransactionXdr(signed);
+
+      addLocalMeasurement({
+        measurementId,
+        projectId: id,
+        timestamp: now,
+        biomassKg: biomassAmount,
+        co2Kg: co2Amount,
+        rawDataHash: dataHash,
+        createdAt: new Date(now).toISOString(),
+      });
+
       router.push(`/projects/${id}`);
     } catch (error) {
       console.error("Error adding measurement:", error);
@@ -78,7 +104,7 @@ export default function NewMeasurementPage() {
         <div className="max-w-md space-y-2">
           <h2 className="text-2xl font-bold text-foreground">Conecte sua carteira</h2>
           <p className="text-muted-foreground">
-            Conecte sua carteira para registrar novas medições.
+            Conecte sua Freighter para registrar novas medições.
           </p>
         </div>
       </div>

@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Activity, CheckCircle, Flame, Leaf, Plus, ExternalLink, Clock } from 'lucide-react';
-import { useWallet } from '@/hooks/useWallet';
-import { getCarbonCreditToken, getMRVRegistry } from '@/lib/contracts';
-import { ethers } from 'ethers';
+import { STELLAR_CONFIG, horizonGet, listAnchorsForAccount } from '@/lib/stellar';
 
 type ActivityItem = {
   id: string;
@@ -15,81 +13,67 @@ type ActivityItem = {
 };
 
 export const RecentActivity = () => {
-  const { wallet } = useWallet();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
-      if (!wallet.signer) return;
-
       setLoading(true);
       try {
-        const mrvContract = getMRVRegistry(wallet.signer);
-        const tokenContract = getCarbonCreditToken(wallet.signer);
-
-        const currentBlock = await wallet.signer.provider?.getBlockNumber() || 0;
-        const fromBlock = Math.max(0, currentBlock - 5000);
-
-        const [addedLogs, verifiedLogs, issuedLogs, retiredLogs] = await Promise.all([
-          mrvContract.queryFilter(mrvContract.filters.MeasurementAdded(), fromBlock),
-          mrvContract.queryFilter(mrvContract.filters.MeasurementVerified(), fromBlock),
-          mrvContract.queryFilter(mrvContract.filters.CreditsIssued(), fromBlock),
-          mrvContract.queryFilter(mrvContract.filters.CreditsRetired(), fromBlock)
-        ]);
-
         const items: ActivityItem[] = [];
 
-        for (const log of addedLogs) {
-          if (!('args' in log)) continue; // Type guard
-          const block = await log.getBlock();
-          items.push({
-            id: log.transactionHash,
-            type: 'measurement',
-            title: 'Nova Medição',
-            description: `Projeto #${log.args[1]} registrou ${log.args[2]}kg de CO₂e`,
-            timestamp: new Date(block.timestamp * 1000),
-            hash: log.transactionHash
-          });
+        if (STELLAR_CONFIG.registryPublicKey) {
+          const anchors = await listAnchorsForAccount(STELLAR_CONFIG.registryPublicKey, 200);
+          for (const e of anchors) {
+            if (e.type !== 'MEASUREMENT_VERIFIED') continue;
+            items.push({
+              id: e.txHash,
+              type: 'verification',
+              title: 'Medição Verificada',
+              description: `${e.approved ? 'Aprovada' : 'Rejeitada'} · ${e.measurementId.slice(0, 10)} · Projeto ${e.projectId}`,
+              timestamp: new Date(e.createdAt),
+              hash: e.txHash,
+            });
+          }
         }
 
-        for (const log of verifiedLogs) {
-          if (!('args' in log)) continue;
-          const block = await log.getBlock();
-          items.push({
-            id: log.transactionHash,
-            type: 'verification',
-            title: 'Medição Verificada',
-            description: `Medição #${log.args[0]} aprovada`,
-            timestamp: new Date(block.timestamp * 1000),
-            hash: log.transactionHash
-          });
-        }
+        if (STELLAR_CONFIG.distributorPublicKey) {
+          const payments = await horizonGet<any>(
+            `/accounts/${STELLAR_CONFIG.distributorPublicKey}/payments?limit=30&order=desc`
+          );
+          const records = payments?._embedded?.records || [];
+          for (const p of records) {
+            if (p.type !== 'payment') continue;
+            if (p.asset_type !== 'credit_alphanum4' && p.asset_type !== 'credit_alphanum12') continue;
+            if (p.asset_code !== STELLAR_CONFIG.assetCode) continue;
+            if (p.asset_issuer !== STELLAR_CONFIG.issuerPublicKey) continue;
 
-        for (const log of issuedLogs) {
-          if (!('args' in log)) continue;
-          const block = await log.getBlock();
-          items.push({
-            id: log.transactionHash,
-            type: 'issuance',
-            title: 'Créditos Emitidos',
-            description: `${ethers.formatUnits(log.args[1], 18)} créditos gerados`,
-            timestamp: new Date(block.timestamp * 1000),
-            hash: log.transactionHash
-          });
-        }
+            const createdAt = String(p.created_at || '');
+            const txHash = String(p.transaction_hash || '');
+            const from = String(p.from || '');
+            const to = String(p.to || '');
+            const amount = String(p.amount || '');
 
-        for (const log of retiredLogs) {
-          if (!('args' in log)) continue;
-          const block = await log.getBlock();
-          items.push({
-            id: log.transactionHash,
-            type: 'retirement',
-            title: 'Créditos Aposentados',
-            description: `${ethers.formatUnits(log.args[1], 18)} aposentados. ${log.args[2]}`,
-            timestamp: new Date(block.timestamp * 1000),
-            hash: log.transactionHash
-          });
+            if (from === STELLAR_CONFIG.distributorPublicKey) {
+              items.push({
+                id: txHash,
+                type: 'issuance',
+                title: 'Créditos Emitidos',
+                description: `${amount} ${STELLAR_CONFIG.assetCode} para ${to.slice(0, 6)}…${to.slice(-4)}`,
+                timestamp: new Date(createdAt),
+                hash: txHash,
+              });
+            } else if (to === STELLAR_CONFIG.distributorPublicKey) {
+              items.push({
+                id: txHash,
+                type: 'retirement',
+                title: 'Créditos Aposentados',
+                description: `${amount} ${STELLAR_CONFIG.assetCode} de ${from.slice(0, 6)}…${from.slice(-4)}`,
+                timestamp: new Date(createdAt),
+                hash: txHash,
+              });
+            }
+          }
         }
 
         // Sort by date desc
@@ -104,7 +88,7 @@ export const RecentActivity = () => {
     };
 
     fetchEvents();
-  }, [wallet.signer]);
+  }, []);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -165,7 +149,7 @@ export const RecentActivity = () => {
                     {item.description}
                   </p>
                   <a 
-                    href={`https://etherscan.io/tx/${item.hash}`} 
+                    href={`https://stellar.expert/explorer/testnet/tx/${item.hash}`} 
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center text-[10px] text-muted-foreground/70 hover:text-primary mt-2 w-fit transition-colors"

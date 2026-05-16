@@ -5,13 +5,20 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, Leaf, CheckCircle2, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useWallet } from '@/hooks/useWallet';
-import { getAlgaeProjectNFT } from '@/lib/contracts';
+import {
+  accountExists,
+  buildRegisterProjectXdr,
+  friendbotFund,
+  sha256Hex,
+  submitSignedTransactionXdr,
+  upsertLocalProject,
+} from '@/lib/stellar';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 
 export default function NewProjectPage() {
   const router = useRouter();
-  const { wallet } = useWallet();
+  const { wallet, signTransactionXdr } = useWallet();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -29,67 +36,46 @@ export default function NewProjectPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!wallet.isConnected || !wallet.signer || !wallet.address) {
+  const handleSubmit = async () => {
+    if (!wallet.isConnected || !wallet.publicKey) {
       alert("Por favor, conecte sua carteira primeiro.");
       return;
-    }
-
-    const targetChainId = Number(process.env.NEXT_PUBLIC_TARGET_CHAIN_ID || 31337);
-    if (wallet.chainId !== targetChainId) {
-        const networkName = targetChainId === 11155111 ? "Sepolia Testnet" : "Localhost 8545";
-        alert(`Você parece estar na rede errada. Por favor, mude para ${networkName} (Chain ID ${targetChainId}).`);
-        return;
     }
 
     setLoading(true);
     setErrorMessage(null);
 
     try {
+      const exists = await accountExists(wallet.publicKey);
+      if (!exists) {
+        await friendbotFund(wallet.publicKey);
+      }
+
+      const projectId = crypto.randomUUID();
+      const createdAt = new Date().toISOString();
+
       const metadata = {
+        id: projectId,
         name: formData.name,
-        description: `Projeto Credita Carbon - ${formData.name}: ${formData.algaeType}. Destinado a ${formData.bioproductTarget}.`,
-        attributes: [
-          { trait_type: "Location", value: formData.location },
-          { trait_type: "Algae Species", value: formData.algaeType },
-          { trait_type: "Estimated Capacity", value: formData.capacity },
-          { trait_type: "Bioproduct Target", value: formData.bioproductTarget },
-          { trait_type: "Production Params", value: formData.productionParams },
-          { trait_type: "Methodology", value: formData.methodology },
-        ],
-        image: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzAyOTczOCIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iNjAiIGZpbGw9IiMwRDJDMzUiIG9wYWNpdHk9IjAuMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIyMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPkNyZWRpdGE8L3RleHQ+PC9zdmc+",
+        description: `Projeto Beta MRV - ${formData.name}: ${formData.algaeType}. Destinado a ${formData.bioproductTarget}.`,
+        location: formData.location,
+        algaeType: formData.algaeType,
+        estimatedCapacity: formData.capacity,
+        imageDataUrl:
+          "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzAyOTczOCIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iNjAiIGZpbGw9IiMwRDJDMzUiIG9wYWNpdHk9IjAuMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIyMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPkNyZWRpdGE8L3RleHQ+PC9zdmc+",
+        createdAt,
       };
 
-      const jsonString = JSON.stringify(metadata);
-      const tokenURI = `data:application/json;base64,${btoa(jsonString)}`;
+      const dataHash = await sha256Hex(JSON.stringify({ ...metadata, methodology: formData.methodology, productionParams: formData.productionParams }));
+      const xdr = await buildRegisterProjectXdr({ publicKey: wallet.publicKey, projectId, dataHash });
+      const signed = await signTransactionXdr(xdr);
+      await submitSignedTransactionXdr(signed);
 
-      console.log("Obtendo contrato AlgaeProjectNFT...");
-      const contract = getAlgaeProjectNFT(wallet.signer);
-      console.log("Contrato em:", await contract.getAddress());
-
-      console.log("Enviando transação registerProject...");
-      // Adicionando um timeout manual para feedback se o Metamask não abrir
-      const txPromise = contract.registerProject(wallet.address, tokenURI);
-      
-      const tx = await txPromise;
-      
-      console.log("Transação enviada:", tx.hash);
-      console.log("Aguardando mineração...");
-      
-      await tx.wait();
-      console.log("Transação confirmada!");
-      
+      upsertLocalProject({ ...metadata, anchoredDataHash: dataHash });
       router.push('/projects');
     } catch (error: any) {
       console.error("Error registering project:", error);
       let msg = error?.reason || error?.message || "Erro desconhecido ao registrar projeto.";
-      
-      // Suggestion for common local dev errors
-      if (msg.includes("nonce") || msg.includes("Internal JSON-RPC error") || msg.includes("replacement transaction underpriced")) {
-          msg = "Erro de transação. Tente resetar o Metamask: Configurações > Avançado > Limpar dados da guia de atividades. " + msg;
-      }
-      
       setErrorMessage(msg);
     } finally {
       setLoading(false);
@@ -103,7 +89,7 @@ export default function NewProjectPage() {
           <Leaf className="h-12 w-12 text-primary" />
         </div>
         <h2 className="text-2xl font-semibold text-foreground">Conecte sua carteira</h2>
-        <p className="text-muted-foreground">Para registrar um projeto na Credita Carbon, conecte sua carteira MetaMask.</p>
+        <p className="text-muted-foreground">Para registrar um projeto, conecte sua carteira Freighter (Stellar).</p>
       </div>
     );
   }
@@ -213,7 +199,7 @@ export default function NewProjectPage() {
 
               <div className="pt-4">
                 <Button 
-                  onClick={handleSubmit} 
+                  onClick={handleSubmit}
                   disabled={loading}
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all"
                 >
