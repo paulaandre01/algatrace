@@ -10,6 +10,7 @@ import {
   addLocalMeasurement,
   buildAddMeasurementXdr,
   friendbotFund,
+  sha256Base64Url,
   sha256Hex,
   submitSignedTransactionXdr,
 } from '@/lib/stellar';
@@ -60,7 +61,7 @@ export default function NewMeasurementPage() {
 
       const raw = JSON.stringify(dataPayload);
       const dataHash = await sha256Hex(raw);
-      const measurementId = await sha256Hex(`${id}|${now}|${dataHash}`);
+      const measurementId = await sha256Base64Url(`${id}|${now}|${dataHash}`);
 
       const exists = await accountExists(wallet.publicKey);
       if (!exists) await friendbotFund(wallet.publicKey);

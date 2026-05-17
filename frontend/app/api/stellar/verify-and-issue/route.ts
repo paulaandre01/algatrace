@@ -82,6 +82,8 @@ export async function POST(req: Request) {
 
     const approved = body.approved !== false;
     const verifiedValue = `${approved ? '1' : '0'}|${body.projectId.slice(0, 12)}|${body.co2Kg}`;
+    const verifyPrefix = 'verified:';
+    const verifyName = `${verifyPrefix}${String(body.measurementId).slice(0, 64 - verifyPrefix.length)}`;
 
     const tx = new TransactionBuilder(source, {
       fee: BASE_FEE,
@@ -89,7 +91,7 @@ export async function POST(req: Request) {
     })
       .addOperation(
         Operation.manageData({
-          name: `verified:${body.measurementId}`,
+          name: verifyName,
           value: verifiedValue.slice(0, 64),
           source: registryKeypair.publicKey(),
         })

@@ -107,6 +107,20 @@ export async function sha256Hex(input: string): Promise<string> {
     .join('');
 }
 
+function base64Encode(bytes: Uint8Array): string {
+  if (typeof Buffer !== 'undefined') return Buffer.from(bytes).toString('base64');
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+export async function sha256Base64Url(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  const bytes = new Uint8Array(digest);
+  return base64Encode(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
   try {
@@ -272,7 +286,10 @@ export async function buildAddMeasurementXdr(params: {
   co2Kg: number;
   dataHash: string;
 }): Promise<string> {
-  const key = `${MEASUREMENT_PREFIX}${params.projectId}:${params.measurementId}`;
+  const projectKey = params.projectId.replace(/-/g, '').slice(0, 12);
+  const maxMeasurementChars = 64 - MEASUREMENT_PREFIX.length - projectKey.length - 1;
+  const measurementKey = params.measurementId.slice(0, Math.max(0, maxMeasurementChars));
+  const key = `${MEASUREMENT_PREFIX}${projectKey}:${measurementKey}`;
   const compact = `b=${params.biomassKg};c=${params.co2Kg};h=${params.dataHash.slice(0, 24)}`;
   const value = compact.length > 64 ? compact.slice(0, 64) : compact;
 
@@ -331,7 +348,7 @@ export async function listAnchorsForAccount(accountId: string, limit = 200): Pro
       });
     } else if (name.startsWith(MEASUREMENT_PREFIX)) {
       const rest = name.slice(MEASUREMENT_PREFIX.length);
-      const [projectId, measurementId] = rest.split(':');
+      const [projectId, measurementId] = rest.includes(':') ? rest.split(':') : ['', rest];
       const parts = String(value).split(';');
       const biom = Number((parts.find((p) => p.startsWith('b=')) || '').slice(2));
       const co2 = Number((parts.find((p) => p.startsWith('c=')) || '').slice(2));
