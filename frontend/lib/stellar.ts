@@ -137,6 +137,18 @@ function writeJson<T>(key: string, value: T): void {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+function decodeMaybeBase64(value: string): string {
+  const input = String(value || '');
+  if (!input) return '';
+  try {
+    if (typeof Buffer !== 'undefined') return Buffer.from(input, 'base64').toString('utf8');
+    if (typeof atob !== 'undefined') return decodeURIComponent(escape(atob(input)));
+  } catch {
+    return input;
+  }
+  return input;
+}
+
 export function listLocalProjects(): LocalProjectMetadata[] {
   return readJson<LocalProjectMetadata[]>(STORAGE_KEYS.projects, []);
 }
@@ -335,7 +347,8 @@ export async function listAnchorsForAccount(accountId: string, limit = 200): Pro
     const name = String(op.name || '');
     const createdAt = String(op.created_at || '');
     const txHash = String(op.transaction_hash || '');
-    const value = op.value ? String(op.value) : '';
+    const rawValue = op.value ? String(op.value) : '';
+    const value = decodeMaybeBase64(rawValue);
 
     if (name.startsWith(PROJECT_PREFIX)) {
       const projectId = name.slice(PROJECT_PREFIX.length);
